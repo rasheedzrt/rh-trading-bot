@@ -11,7 +11,7 @@ from datetime import datetime
 from math import floor
 import matplotlib.pyplot as plt
 import numpy as np
-import os.path as path
+from os import path, makedirs
 import pandas as pd
 import pickle
 from random import randint
@@ -105,18 +105,25 @@ class bot:
 
         print( '-- End Configuration --------------------' )
 
-        if path.exists( 'orders.pickle' ):
+        # Initialize folders where to store data and charts
+        if ( not path.exists( 'pickle' ) ):
+            makedirs( 'pickle' )
+
+        if ( not path.exists( 'charts' ) ):
+            makedirs( 'charts' )
+
+        if path.exists( 'pickle/orders.pickle' ):
             # Load state
             print( 'Loading previously saved state' )
-            with open( 'orders.pickle', 'rb' ) as f:
+            with open( 'pickle/orders.pickle', 'rb' ) as f:
                 self.orders = pickle.load( f )
         else:
             # Start from scratch
             print( 'No state saved, starting from scratch' )
 
         # Load data points
-        if ( path.exists( 'dataframe.pickle' ) ):
-            self.data = pd.read_pickle( 'dataframe.pickle' )
+        if ( path.exists( 'pickle/dataframe.pickle' ) ):
+            self.data = pd.read_pickle( 'pickle/dataframe.pickle' )
             
             # Only track up to a fixed amount of data points
             self.data = self.data.tail( config[ 'max_data_rows' ] - 1 )
@@ -244,7 +251,7 @@ class bot:
                 slice = self.data.loc[:, [ 'timestamp', a_robinhood_ticker, str( a_robinhood_ticker ) + '_SMA_F', str( a_robinhood_ticker ) + '_SMA_S' ] ]
                 slice[ 'timestamp' ] = [ datetime.strptime( x, '%Y-%m-%d %H:%M').strftime( "%d@%H:%M" ) for x in slice[ 'timestamp' ] ]
                 fig = slice.plot( x = 'timestamp', xlabel = 'Time', ylabel = 'Price', figsize = ( 15, 5 ), fontsize = 13 ).get_figure()
-                fig.savefig( 'chart-' + str( a_robinhood_ticker ).lower() + '-sma.png', dpi = 300 )
+                fig.savefig( 'charts/chart-' + str( a_robinhood_ticker ).lower() + '-sma.png', dpi = 300 )
                 plt.close( fig )
 
         return self.data
@@ -395,10 +402,10 @@ class bot:
         print( 'Buying power: $' + str( self.available_cash ) )
 
         # Save state
-        with open( 'orders.pickle', 'wb' ) as f:
+        with open( 'pickle/orders.pickle', 'wb' ) as f:
             pickle.dump( self.orders, f )
 
-        self.data.to_pickle( 'dataframe.pickle' )
+        self.data.to_pickle( 'pickle/dataframe.pickle' )
 
 if __name__ == "__main__":
     b = bot()
