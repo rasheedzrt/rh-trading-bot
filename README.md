@@ -16,7 +16,7 @@ You'll need access to a working Python3 interpreter. For the sake of simplicity,
 Once you have all the dependencies in place, copy `config-sample.py` to `config.py` and enter at least your Robinhood username and password. You can also use the following parameters to customize the bot's behavior:
 * (string) `username` and `password`: Robinhood credentials
 * (bool) `trades_enabled`:  If False, run in test mode and just collect data, otherwise submit orders
-* (bool) `debug_enabled`: Simulate interactions with Robinhood (via random values)
+* (bool) `debug_enabled`: Simulate connection with Kraken Robinhood (by generating random values for all API calls)
 * (list) `ticker_list`: List of coin ticker pairs Kraken/Robinhood (XETHZUSD/ETH, etc); see [here](https://api.kraken.com/0/public/AssetPairs) for a complete list of available tickers on Kraken
 * (dict) `trade_strategies`: Select which strategies would you like the bot to use (buy, sell)
 * (float) `buy_below_moving_average`: If the price dips below the MA by this percentage, and if the RSI is below the oversold threshold (see below), it will try to buy
