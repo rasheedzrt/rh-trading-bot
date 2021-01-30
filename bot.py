@@ -38,11 +38,11 @@ class bot:
         'username': '',
         'password': '',
         'trades_enabled': False,
-        'debug_enabled': False,
+        'simulate_api_calls': False,
         'ticker_list': {
             'XETHZUSD': 'ETH'
         },
-        'trade_strategies': {
+        'trade_signals': {
             'buy': 'sma_rsi_threshold',
             'sell': 'above_buy'
         },
@@ -153,7 +153,7 @@ class bot:
                 self.data[ a_robinhood_ticker + '_MACD' ], self.data[ a_robinhood_ticker + '_MACD_S' ], macd_hist = MACD( self.data[ a_robinhood_ticker ].values, fastperiod = config[ 'moving_average_periods' ][ 'macd_fast' ], slowperiod = config[ 'moving_average_periods' ][ 'macd_slow' ], signalperiod = config[ 'moving_average_periods' ][ 'macd_signal' ] )
 
         # Connect to RobinHood
-        if ( not config[ 'debug_enabled' ] ):
+        if ( not config[ 'simulate_api_calls' ] ):
             try:
                 rh_response = rh.login( config[ 'username' ], config[ 'password' ] )
             except:
@@ -162,7 +162,7 @@ class bot:
 
         # Download RobinHood parameters
         for a_robinhood_ticker in config[ 'ticker_list' ].values():
-            if ( not config[ 'debug_enabled' ] ):
+            if ( not config[ 'simulate_api_calls' ] ):
                 try:
                     result = rh.get_crypto_info( a_robinhood_ticker )
                     s_inc = result[ 'min_order_quantity_increment' ]
@@ -215,7 +215,7 @@ class bot:
 
         # Calculate moving averages and RSI values
         for a_kraken_ticker, a_robinhood_ticker in config[ 'ticker_list' ].items():
-            if ( not config[ 'debug_enabled' ] ):
+            if ( not config[ 'simulate_api_calls' ] ):
                 try:
                     result = get_json( 'https://api.kraken.com/0/public/Ticker?pair=' + str( a_kraken_ticker ) ).json()
 
@@ -252,7 +252,7 @@ class bot:
     def get_available_cash( self ):
         available_cash = -1.0
         
-        if ( not config[ 'debug_enabled' ] ):
+        if ( not config[ 'simulate_api_calls' ] ):
             try:
                 me = rh.account.load_phoenix_account( info=None )
                 available_cash = round( float( me[ 'crypto_buying_power' ][ 'amount' ] ) - config[ 'reserve' ], 3 )
@@ -264,7 +264,7 @@ class bot:
         return available_cash
 
     def cancel_order( self, order_id ):
-        if ( not config[ 'debug_enabled' ] ):
+        if ( not config[ 'simulate_api_calls' ] ):
             try:
                 cancelResult = rh.cancel_crypto_order( order_id )
             except:
@@ -287,7 +287,7 @@ class bot:
 
         print( 'Buying ' + str( ticker ) + ' ' + str( quantity ) + ' at $' + str( price ) )
 
-        if ( config[ 'trades_enabled' ] and not config[ 'debug_enabled' ] ):
+        if ( config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ] ):
             try:
                 buy_info = rh.order_buy_crypto_limit( str( ticker ), quantity, price )
 
@@ -311,7 +311,7 @@ class bot:
 
         print( 'Selling ' + str( asset.ticker ) + ' ' + str( asset.quantity ) + ' for $' + str( price ) + ' (profit: $' + str( profit ) + ')' )
 
-        if ( config[ 'trades_enabled' ] and not config[ 'debug_enabled' ] ):
+        if ( config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ] ):
             try:
                 sell_info = rh.order_sell_crypto_limit( str( asset.ticker ), asset.quantity, price )
 
@@ -374,7 +374,7 @@ class bot:
 
                     # Is it time to sell any of them?
                     if ( 
-                        getattr( self.signal, 'sell_' + str(  config[ 'trade_strategies' ][ 'sell' ] ) )( a_asset, self.data ) or
+                        getattr( self.signal, 'sell_' + str(  config[ 'trade_signals' ][ 'sell' ] ) )( a_asset, self.data ) or
 
                         # Stop-loss: is the current price below the purchase price by the percentage defined in the config file?
                         ( self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ) )
@@ -383,7 +383,7 @@ class bot:
 
         # Buy?
         for a_robinhood_ticker in config[ 'ticker_list' ].values():
-            if ( getattr( self.signal, 'buy_' + str(  config[ 'trade_strategies' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ) ):
+            if ( getattr( self.signal, 'buy_' + str(  config[ 'trade_signals' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ) ):
                 self.is_new_order_added = self.buy( a_robinhood_ticker ) or self.is_new_order_added
 
         # Let's make sure we have the correct cash amount available for trading

@@ -2,11 +2,11 @@ config = {
     'username': "", # Robinhood credentials
     'password': "",
     'trades_enabled': False, # if False, just collect data
-    'debug_enabled': False, # if enabled, just pretend to connect to Robinhood
+    'simulate_api_calls': False, # if enabled, just pretend to connect to Robinhood
     'ticker_list': { # list of coin ticker pairs Kraken/Robinhood (XETHZUSD/ETH, etc) - https://api.kraken.com/0/public/AssetPairs
         'XETHZUSD': 'ETH'
     }, 
-    'trade_strategies': { # select which strategies would you like the bot to use (buy, sell); see documentation for more info
+    'trade_signals': { # select which strategies would you like the bot to use (buy, sell); see documentation for more info
         'buy': 'sma_rsi_threshold',
         'sell': 'above_buy'
     },
