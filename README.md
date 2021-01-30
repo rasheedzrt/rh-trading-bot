@@ -34,7 +34,7 @@ Once you have all the dependencies in place, copy `config-sample.py` to `config.
 ## Running the bot
 If you want to keep the bot running even when you're not logged into your server, I recommend using the [nohup](https://linuxize.com/post/linux-nohup-command/) command in Linux. It will save its output in a file called `nohup.out`, where you can see what the bot is thinking. Information about the bot's state is also saved in three pickle files, so that if you stop and restart it, it will continue from where it left off:
 
-> `nohup ./bot.py &`
+`nohup ./bot.py &`
 
 The overall flow looks like this:
 * Load the configuration and initialize or load a previously saved state
@@ -44,6 +44,7 @@ The overall flow looks like this:
 * If the conditions to buy or sell are met, submit the corresponding order
 * Rinse and repeat
 
+## Bot Status
 The bot maintains a list of purchased assets (saved as `orders.pickle`) and at each iteration, it determines if the conditions to sell any of them are met. It also handles swing and miss orders, by checking if any of the orders placed during the previous iteration are still pending (not filled), and cancels them. At each iteration, it will output something like this:
 
 ```
@@ -62,6 +63,11 @@ Buying power: $627.04
 ```
 
 The first section is a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings. The "Orders" section, if present, lists all the purchased assets the bot is managing for you, along with their purchase price, cost and current value. And then the "Bot Status" section shows the available cash amount that can be used to buys new assets.
+
+## Charts
+How do they say? A picture is always worth a thousand words, ehm... data points. For each coin you track, a line chart will be refreshed at each iteration (and saved in the `charts` folder), summarizing the current state and the SMA indicators. 
+
+![](charts/chart-eth-sma-demo.png)
 
 ## Indicators
 ### Relative Strength Index
