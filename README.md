@@ -44,7 +44,22 @@ The overall flow looks like this:
 * If the conditions to buy or sell are met, submit the corresponding order
 * Rinse and repeat
 
-The bot maintains a list of purchased assets (saved as `orders.pickle`) and at each iteration, it determines if the conditions to sell any of them are met. It also handles swing and miss orders, by checking if any of the orders placed during the previous iteration are still pending (not filled), and cancels them.
+The bot maintains a list of purchased assets (saved as `orders.pickle`) and at each iteration, it determines if the conditions to sell any of them are met. It also handles swing and miss orders, by checking if any of the orders placed during the previous iteration are still pending (not filled), and cancels them. At each iteration, it will output something like this:
+
+`-- 2021-01-30 12:10 ---------------------
+             timestamp      ETH    ETH_SMA_F    ETH_SMA_S    ETH_RSI  ETH_MACD  ETH_MACD_S
+1271  2021-01-30 11:52  1354.97  1367.635833  1352.513646  45.503743  2.753820    5.051358
+1272  2021-01-30 11:57  1358.87  1367.169583  1352.657708  48.483193  2.468220    4.706939
+1273  2021-01-30 12:02  1358.90  1366.755417  1352.796667  48.505791  2.209200    4.373907
+1274  2021-01-30 12:07  1361.22  1366.350833  1352.928750  50.266228  2.071277    4.066890
+1275  2021-01-30 12:10  1361.54  1366.090000  1353.056250  50.509744  1.956449    3.785498
+-- Orders -------------------------------
+ETH: 0.071683 | Price: $1395.03 | Cost: $100.0 | Current value: $97.599
+ETH: 0.146228 | Price: $1367.72 | Cost: $199.999 | Current value: $199.095
+-- Bot Status ---------------------------
+Buying power: $627.04`
+
+The first section is a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings. The "Orders" section, if present, lists all the purchased assets the bot is managing for you, along with their purchase price, cost and current value. And then the "Bot Status" section shows the available cash amount that can be used to buys new assets.
 
 ## Indicators
 ### Relative Strength Index
