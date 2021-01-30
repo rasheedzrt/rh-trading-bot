@@ -381,14 +381,14 @@ class bot:
                     ):
                         self.is_new_order_added = self.sell( a_asset ) or self.is_new_order_added
 
-        # Let's make sure we have the correct cash amount available for trading
-        if ( self.is_new_order_added or self.available_cash < 0 ):
-            self.available_cash = self.get_available_cash()
-
         # Buy?
         for a_robinhood_ticker in config[ 'ticker_list' ].values():
             if ( getattr( self.signal, 'buy_' + str(  config[ 'trade_strategies' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ) ):
                 self.is_new_order_added = self.buy( a_robinhood_ticker ) or self.is_new_order_added
+
+        # Let's make sure we have the correct cash amount available for trading
+        if ( self.is_new_order_added or self.available_cash < 0 ):
+            self.available_cash = self.get_available_cash()
 
         # Final status for this iteration
         print( '-- Bot Status ---------------------------' )

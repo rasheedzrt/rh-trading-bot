@@ -78,10 +78,10 @@ class signals:
             data.iloc[ -4 ][ asset.ticker + '_SMA_F' ] > data.iloc[ -4 ][ asset.ticker + '_SMA_S' ]  and
             
             # ... and they diverge
-            data.iloc[ -1 ][ ticker + '_SMA_S' ] - data.iloc[ -1 ][ ticker + '_SMA_F' ] >= data.iloc[ -2 ][ ticker + '_SMA_S' ] - data.iloc[ -2 ][ ticker + '_SMA_F' ] and
+            data.iloc[ -1 ][ asset.ticker + '_SMA_S' ] - data.iloc[ -1 ][ asset.ticker + '_SMA_F' ] >= data.iloc[ -2 ][ asset.ticker + '_SMA_S' ] - data.iloc[ -2 ][ asset.ticker + '_SMA_F' ] and
             
             # RSI below threshold
-            data.iloc[ -1 ][ ticker + '_RSI' ] <= config[ 'rsi_threshold' ][ 'sell' ] and
+            data.iloc[ -1 ][ asset.ticker + '_RSI' ] <= config[ 'rsi_threshold' ][ 'sell' ] and
 
             # Price is greater than purchase price by at least profit percentage
             data.iloc[ -1 ][ asset.ticker ] >= asset.price + (  asset.price * config[ 'profit_percentage' ] )
