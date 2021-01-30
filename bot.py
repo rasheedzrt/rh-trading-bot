@@ -241,8 +241,9 @@ class bot:
                 self.data[ a_robinhood_ticker + '_MACD' ], self.data[ a_robinhood_ticker + '_MACD_S' ], macd_hist = MACD( self.data[ a_robinhood_ticker ].values, fastperiod = config[ 'moving_average_periods' ][ 'macd_fast' ], slowperiod = config[ 'moving_average_periods' ][ 'macd_slow' ], signalperiod = config[ 'moving_average_periods' ][ 'macd_signal' ] )
 
             if ( config[ 'save_charts' ] == True ):
-                slice = self.data[ [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_SMA_F', str( a_robinhood_ticker ) + '_SMA_S' ] ]
-                fig = slice.plot.line().get_figure()
+                slice = self.data.loc[:, [ 'timestamp', a_robinhood_ticker, str( a_robinhood_ticker ) + '_SMA_F', str( a_robinhood_ticker ) + '_SMA_S' ] ]
+                slice[ 'timestamp' ] = [ datetime.strptime( x, '%Y-%m-%d %H:%M').strftime( "%d@%H:%M" ) for x in slice[ 'timestamp' ] ]
+                fig = slice.plot( x = 'timestamp', xlabel = 'Time', ylabel = 'Price', figsize = ( 15, 5 ), fontsize = 13 ).get_figure()
                 fig.savefig( 'chart-' + str( a_robinhood_ticker ).lower() + '-sma.png', dpi = 300 )
                 plt.close( fig )
 
@@ -336,10 +337,6 @@ class bot:
         # We don't have enough consecutive data points to decide what to do
         self.is_trading_locked = not self.is_data_consistent( now )
 
-        # Let's make sure we have the correct cash amount available for trading
-        if ( self.is_new_order_added or self.available_cash < 0 ):
-            self.available_cash = self.get_available_cash()
-
         if ( len( self.orders ) > 0 ):
             print( '-- Orders -------------------------------' )
 
@@ -366,12 +363,9 @@ class bot:
                     self.is_new_order_added = False
 
                 if ( not is_asset_deleted ):
-                    # Print a summary of all our assets
-                    print( str( a_asset.ticker ) + ': ' + str( a_asset.quantity ), end = '' )
-            
                     if ( a_asset.quantity > 0.0 ):
-                        cost = a_asset.quantity * a_asset.price
-                        print( ' | Price: $' + str( round( a_asset.price, 3 ) ) + ' | Cost: $' + str( round( cost, 3 ) ) + ' | Current value: $' + str( round( self.data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) )
+                        # Print a summary of all our assets
+                        print( str( a_asset.ticker ) + ': ' + str( a_asset.quantity ) + ' | Price: $' + str( round( a_asset.price, 3 ) ) + ' | Cost: $' + str( round( a_asset.quantity * a_asset.price, 3 ) ) + ' | Current value: $' + str( round( self.data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) )
                     else:
                         # We sold this asset during the previous iteration, and it wasn't still pending here above
                         # We can remove it from our orders safely (garbage collector)
@@ -386,6 +380,10 @@ class bot:
                         ( self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ) )
                     ):
                         self.is_new_order_added = self.sell( a_asset ) or self.is_new_order_added
+
+        # Let's make sure we have the correct cash amount available for trading
+        if ( self.is_new_order_added or self.available_cash < 0 ):
+            self.available_cash = self.get_available_cash()
 
         # Buy?
         for a_robinhood_ticker in config[ 'ticker_list' ].values():
