@@ -66,7 +66,7 @@ Buying power: $148.26
 1813  2021-02-01 10:57  1310.41  1315.852500  1326.686250  32.637159 -4.308344   -4.092017
 ```
 
-The first section is a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings. The "Orders" section, if present, lists all the purchased assets the bot is managing for you, along with their purchase price, cost and current value. And then the "Bot Status" section shows the available cash amount that can be used to buys new assets.
+The "Assets" section, if present, lists all the purchased assets the bot is managing for you, along with their purchase price, cost and current value. The "Bot Status" section shows the available cash amount that can be used to buys new assets. Finally, you'll see a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings.
 
 ## Charts
 How does the saying go? A picture is always worth a thousand words, ehm... data points. For each coin you track, a line chart will be refreshed at each iteration (and saved in the `charts` folder), summarizing the current state and the SMA indicators. 
