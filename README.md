@@ -51,22 +51,22 @@ The overall flow looks like this:
 A summary of each iteration is logged in `status.log`. The bot maintains a list of purchased assets (saved as `orders.pickle`) and at each iteration, it determines if the conditions to sell any of them are met. It also handles swing and miss orders, by checking if any of the orders placed during the previous iteration are still pending (not filled), and cancels them. The typical output should resemble this format:
 
 ```
--- Assets -------------------------------
-ETH: 0.071683 | Price: $1395.03 | Cost: $100.0 | Current value: $93.934
-ETH: 0.146228 | Price: $1367.72 | Cost: $199.999 | Current value: $199.095
 -- Bot Status ---------------------------
-Iteration completed on 2021-02-01 10:57
-Buying power: $148.26
+Iteration completed on 2021-02-01 15:25
+Buying power: $448.49
 -- Data Snapshot ------------------------
              timestamp      ETH    ETH_SMA_F    ETH_SMA_S    ETH_RSI  ETH_MACD  ETH_MACD_S
-1809  2021-02-01 10:17  1312.67  1318.220000  1328.046458  30.821133 -4.524939   -3.683002
-1810  2021-02-01 10:19  1314.98  1317.426667  1327.583333  37.017439 -4.414447   -3.865864
-1811  2021-02-01 10:24  1313.95  1316.963333  1327.267500  35.471976 -4.359737   -3.989332
-1812  2021-02-01 10:49  1315.90  1316.358333  1326.952500  40.594291 -4.111635   -4.019908
-1813  2021-02-01 10:57  1310.41  1315.852500  1326.686250  32.637159 -4.308344   -4.092017
+1867  2021-02-01 15:09  1338.28  1330.445000  1319.163125  74.024414  4.163829    3.842706
+1868  2021-02-01 15:14  1339.00  1331.281667  1319.811042  74.806159  4.450957    3.994769
+1869  2021-02-01 15:19  1339.00  1332.134167  1320.424167  74.806159  4.625192    4.152375
+1870  2021-02-01 15:24  1337.01  1333.000833  1321.011667  68.224578  4.550246    4.251843
+1871  2021-02-01 15:25  1337.01  1333.640000  1321.655208  68.224578  4.439672    4.298800
+-- Assets -------------------------------
+ETH: 0.071683 | Price: $1395.03 | Cost: $100.0 | Current value: $95.841
+ETH: 0.302484 | Price: $1322.38 | Cost: $399.999 | Current value: $404.424
 ```
 
-The "Assets" section, if present, lists all the purchased assets the bot is managing for you, along with their purchase price, cost and current value. The "Bot Status" section shows the available cash amount that can be used to buys new assets. Finally, you'll see a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings.
+The "Bot Status" section shows the available cash amount that can be used to buys new assets. Next you'll see a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings. Last but least, the "Assets" section, if present, lists all the purchased assets the bot is managing for you, along with their purchase price, cost and current value.
 
 ## Charts
 How does the saying go? A picture is always worth a thousand words, ehm... data points. For each coin you track, a line chart will be refreshed at each iteration (and saved in the `charts` folder), summarizing the current state and the SMA indicators. 
