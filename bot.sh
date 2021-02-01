@@ -7,8 +7,9 @@ BOTPID=`ps -ef | grep '/usr/bin/python[3] -u ./core.py' | awk '{ print $2 }'`
 start() {
     if [ -z "$BOTPID" ]; then
         /usr/bin/nohup ./core.py > status.log 2>&1 &
+        sleep 2
         BOTPID=`ps -ef | grep '/usr/bin/python[3] -u ./core.py' | awk '{ print $2 }'`
-        echo "[$BOTPID] Bot started."
+        echo "[PID:$BOTPID] Bot started."
     else
         echo "Bot already running."
     fi
@@ -19,8 +20,9 @@ stop() {
         echo "Bot not running."
     else
         kill $BOTPID
-        sleep 2
-        echo "[$BOTPID] Bot stopped."
+        sleep 1
+        echo "[PID:$BOTPID] Bot stopped."
+        BOTPID=`ps -ef | grep '/usr/bin/python[3] -u ./core.py' | awk '{ print $2 }'`
     fi
 }
 
@@ -28,7 +30,7 @@ status() {
     if [ -z "$BOTPID" ]; then
         echo "Bot not running."
     else
-        echo "[$BOTPID] Bot running."
+        echo "[PID:$BOTPID] Bot running."
     fi
 }
 
