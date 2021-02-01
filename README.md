@@ -47,6 +47,8 @@ The overall flow looks like this:
 * If the conditions to buy or sell are met, submit the corresponding order
 * Rinse and repeat
 
+A summary of each iteration is logged in `status.log`.
+
 ## Bot Status
 The bot maintains a list of purchased assets (saved as `orders.pickle`) and at each iteration, it determines if the conditions to sell any of them are met. It also handles swing and miss orders, by checking if any of the orders placed during the previous iteration are still pending (not filled), and cancels them. At each iteration, it will output something like this:
 
