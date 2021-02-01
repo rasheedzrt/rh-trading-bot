@@ -32,7 +32,7 @@ Once you have all the dependencies in place, clone this repo somewhere on your m
 * (int) `max_data_rows`: Max number of data points to store in the Pickle file (if you have issues with memory limits on your machine). 1k rows = 70kB
 
 ## Running the bot
-I've included a simple utility Bash script to start, stop and check the bot's status:
+I've included a simple Bash utility script to start, stop and check the bot's status:
 
 * `./bot.sh start` will run the bot in the background (even after you close your terminal window)
 * `./bot.sh stop` will stop the background process
