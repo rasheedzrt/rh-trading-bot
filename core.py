@@ -184,8 +184,6 @@ class bot:
 
         # Initialize the available_cash amount
         self.available_cash = self.get_available_cash()
-        if ( self.available_cash >= 0 ):
-            print( 'Buying power: $' + str( self.available_cash ) )
 
         print( 'Bot Ready' )
 
@@ -340,6 +338,13 @@ class bot:
         # We don't have enough consecutive data points to decide what to do
         self.is_trading_locked = not self.is_data_consistent( now )
 
+         # Final status for this iteration
+        print( '-- Bot Status ---------------------------' )
+        print( 'Iteration completed on ' +str( datetime.now().strftime( '%Y-%m-%d %H:%M' ) ) )
+        print( 'Buying power: $' + str( self.available_cash ) )
+        print( '-- Data Snapshot ------------------------' )
+        print( self.data.tail() )
+
         if ( len( self.orders ) > 0 ):
             print( '-- Assets -------------------------------' )
 
@@ -381,13 +386,6 @@ class bot:
             for a_robinhood_ticker in config[ 'ticker_list' ].values():
                 if ( getattr( self.signal, 'buy_' + str(  config[ 'trade_signals' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ) ):
                     self.is_new_order_submitted = self.buy( a_robinhood_ticker ) or self.is_new_order_submitted
-        
-        # Final status for this iteration
-        print( '-- Bot Status ---------------------------' )
-        print( 'Iteration completed on ' +str( datetime.now().strftime( '%Y-%m-%d %H:%M' ) ) )
-        print( 'Buying power: $' + str( self.available_cash ) )
-        print( '-- Data Snapshot ------------------------' )
-        print( self.data.tail() )
 
         # Save state
         with open( 'pickle/orders.pickle', 'wb' ) as f:
