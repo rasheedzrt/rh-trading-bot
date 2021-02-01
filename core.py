@@ -185,7 +185,7 @@ class bot:
         # Initialize the available_cash amount
         self.available_cash = self.get_available_cash()
         if ( self.available_cash >= 0 ):
-            print( 'Buying power: ' + str( self.available_cash ) )
+            print( 'Buying power: $' + str( self.available_cash ) )
 
         print( 'Bot Ready' )
 
