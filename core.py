@@ -280,7 +280,7 @@ class bot:
         return True
 
     def buy( self, ticker ):
-        if ( self.available_cash < config[ 'buy_amount_per_trade' ] or self.is_trading_locked ):
+        if ( self.available_cash == 0 or self.available_cash < config[ 'buy_amount_per_trade' ] or self.is_trading_locked ):
             return False
         
         # Values need to be specified to no more precision than listed in min_price_increments.
