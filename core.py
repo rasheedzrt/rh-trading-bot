@@ -248,7 +248,10 @@ class bot:
             if ( config[ 'save_charts' ] == True ):
                 slice = self.data.loc[:, [ 'timestamp', a_robinhood_ticker, str( a_robinhood_ticker ) + '_SMA_F', str( a_robinhood_ticker ) + '_SMA_S' ] ]
                 slice[ 'timestamp' ] = [ datetime.strptime( x, '%Y-%m-%d %H:%M').strftime( "%d@%H:%M" ) for x in slice[ 'timestamp' ] ]
-                fig = slice.plot( x = 'timestamp', xlabel = 'Time', ylabel = 'Price', figsize = ( 15, 5 ), fontsize = 13 ).get_figure()
+                fig = slice.plot( x = 'timestamp', xlabel = 'Time', ylabel = 'Price', figsize = ( 15, 5 ), fontsize = 13, linewidth = 0.6 )
+                fig.lines[ 1 ].set_alpha( 0.6 )
+                fig.lines[ 2 ].set_alpha( 0.6 )
+                fig = fig.get_figure()
                 fig.savefig( 'charts/chart-' + str( a_robinhood_ticker ).lower() + '-sma.png', dpi = 300 )
                 plt.close( fig )
 
