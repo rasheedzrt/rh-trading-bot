@@ -13,18 +13,15 @@ class signals:
             not isnan( data.iloc[ -1 ][ ticker + '_SMA_F' ] ) and
             not isnan( data.iloc[ -2 ][ ticker + '_SMA_F' ] ) and
             not isnan( data.iloc[ -3 ][ ticker + '_SMA_F' ] ) and
-            not isnan( data.iloc[ -4 ][ ticker + '_SMA_F' ] ) and
             not isnan( data.iloc[ -1 ][ ticker + '_SMA_S' ] ) and
             not isnan( data.iloc[ -2 ][ ticker + '_SMA_S' ] ) and
             not isnan( data.iloc[ -3 ][ ticker + '_SMA_S' ] ) and
-            not isnan( data.iloc[ -4 ][ ticker + '_SMA_S' ] ) and
             not isnan( data.iloc[ -1 ][ ticker + '_RSI' ] ) and
 
             # Fast-SMA crossed Slow-SMA and stays above
             data.iloc[ -1 ][ ticker + '_SMA_F' ] >= data.iloc[ -1 ][ ticker + '_SMA_S' ]  and
             data.iloc[ -2 ][ ticker + '_SMA_F' ] >= data.iloc[ -2 ][ ticker + '_SMA_S' ]  and
-            data.iloc[ -3 ][ ticker + '_SMA_F' ] >= data.iloc[ -3 ][ ticker + '_SMA_S' ]  and
-            data.iloc[ -4 ][ ticker + '_SMA_F' ] < data.iloc[ -4 ][ ticker + '_SMA_S' ]  and
+            data.iloc[ -3 ][ ticker + '_SMA_F' ] < data.iloc[ -3 ][ ticker + '_SMA_S' ]  and
             
             # ... and they diverge
             data.iloc[ -1 ][ ticker + '_SMA_F' ] - data.iloc[ -1 ][ ticker + '_SMA_S' ] >= data.iloc[ -2 ][ ticker + '_SMA_F' ] - data.iloc[ -2 ][ ticker + '_SMA_S' ] and
@@ -64,18 +61,15 @@ class signals:
             not isnan( data.iloc[ -1 ][ asset.ticker + '_SMA_F' ] ) and
             not isnan( data.iloc[ -2 ][ asset.ticker + '_SMA_F' ] ) and
             not isnan( data.iloc[ -3 ][ asset.ticker + '_SMA_F' ] ) and
-            not isnan( data.iloc[ -4 ][ asset.ticker + '_SMA_F' ] ) and
             not isnan( data.iloc[ -1 ][ asset.ticker + '_SMA_S' ] ) and
             not isnan( data.iloc[ -2 ][ asset.ticker + '_SMA_S' ] ) and
             not isnan( data.iloc[ -3 ][ asset.ticker + '_SMA_S' ] ) and
-            not isnan( data.iloc[ -4 ][ asset.ticker + '_SMA_S' ] ) and
             not isnan( data.iloc[ -1 ][ asset.ticker + '_RSI' ] ) and
 
             # Fast-SMA crossed Slow-SMA and stays above
             data.iloc[ -1 ][ asset.ticker + '_SMA_F' ] <= data.iloc[ -1 ][ asset.ticker + '_SMA_S' ]  and
             data.iloc[ -2 ][ asset.ticker + '_SMA_F' ] <= data.iloc[ -2 ][ asset.ticker + '_SMA_S' ]  and
-            data.iloc[ -3 ][ asset.ticker + '_SMA_F' ] <= data.iloc[ -3 ][ asset.ticker + '_SMA_S' ]  and
-            data.iloc[ -4 ][ asset.ticker + '_SMA_F' ] > data.iloc[ -4 ][ asset.ticker + '_SMA_S' ]  and
+            data.iloc[ -3 ][ asset.ticker + '_SMA_F' ] > data.iloc[ -3 ][ asset.ticker + '_SMA_S' ]  and
             
             # ... and they diverge
             data.iloc[ -1 ][ asset.ticker + '_SMA_S' ] - data.iloc[ -1 ][ asset.ticker + '_SMA_F' ] >= data.iloc[ -2 ][ asset.ticker + '_SMA_S' ] - data.iloc[ -2 ][ asset.ticker + '_SMA_F' ] and

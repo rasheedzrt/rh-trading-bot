@@ -385,6 +385,10 @@ class bot:
                     # We can remove it from our orders safely (garbage collector)
                     self.orders.pop( a_asset.order_id )
 
+        # When the Robinhood API fails to return a reliable value, we try again
+        if ( self.available_cash < 0 ):
+            self.available_cash = self.get_available_cash()
+
         # Don't buy and sell in the same iteration
         if ( not self.is_new_order_submitted ):
             for a_robinhood_ticker in config[ 'ticker_list' ].values():
