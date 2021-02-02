@@ -124,9 +124,7 @@ class bot:
         # Load data points
         if ( path.exists( 'pickle/dataframe.pickle' ) ):
             self.data = pd.read_pickle( 'pickle/dataframe.pickle' )
-            
-            # Only track up to a fixed amount of data points
-            self.data = self.data.tail( config[ 'max_data_rows' ] - 1 )
+
         else:
             # Download historical data from Kraken
             column_names = [ 'timestamp' ]
@@ -342,6 +340,7 @@ class bot:
         # Is any of our still orders not filled? (swing/miss)
         # This variable is True if we bought or sold assets during the previous iteration
         if ( self.is_new_order_submitted ):
+            print( 'Checking open orders')
             try:
                 open_orders = rh.get_all_open_crypto_orders()
             except:
@@ -384,6 +383,9 @@ class bot:
             for a_robinhood_ticker in config[ 'ticker_list' ].values():
                 if ( getattr( self.signal, 'buy_' + str(  config[ 'trade_signals' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ) ):
                     self.is_new_order_submitted = self.buy( a_robinhood_ticker ) or self.is_new_order_submitted
+
+        # Only track up to a fixed amount of data points
+        self.data = self.data.tail( config[ 'max_data_rows' ] )
 
         # Final status for this iteration
         print( '-- Bot Status ---------------------------' )
