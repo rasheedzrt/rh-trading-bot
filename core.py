@@ -73,7 +73,7 @@ class bot:
     
     available_cash = 0
     is_trading_locked = False # used to determine if we have had a break in our incoming price data and hold buys if so
-    is_new_order_submitted = False # the bot performs certain cleanup operations after new orders are sent out
+    is_new_order_submitted = True # the bot performs certain cleanup operations after new orders are sent out
 
     signal = signals()
 
@@ -181,9 +181,6 @@ class bot:
             else:
                 self.min_share_increments.update( { a_robinhood_ticker: 0.0001 } )
                 self.min_price_increments.update( { a_robinhood_ticker: 0.0001 } )
-
-        # Initialize the available_cash amount
-        self.available_cash = self.get_available_cash()
 
         print( 'Bot Ready' )
 
@@ -341,36 +338,29 @@ class bot:
 
         # We don't have enough consecutive data points to decide what to do
         self.is_trading_locked = not self.is_data_consistent( now )
+        
+        # Is any of our still orders not filled? (swing/miss)
+        # This variable is True if we bought or sold assets during the previous iteration
+        if ( self.is_new_order_submitted ):
+            try:
+                open_orders = rh.get_all_open_crypto_orders()
+            except:
+                print( 'An exception occurred while retrieving list of open orders.' )
+                open_orders = []
 
-         # Final status for this iteration
-        print( '-- Bot Status ---------------------------' )
-        print( 'Iteration completed on ' +str( datetime.now().strftime( '%Y-%m-%d %H:%M' ) ) )
-        print( 'Buying power: $' + str( self.available_cash ) )
-        print( '-- Data Snapshot ------------------------' )
-        print( self.data.tail() )
+            for a_order in open_orders:
+                if ( a_order[ 'id' ] in self.orders and self.cancel_order( a_order[ 'id' ] ) ):
+                    print( 'Order #' + str( a_order[ 'id' ] ) + ' (' + a_order[ 'side' ] + ' ' + self.orders[ a_order[ 'id' ] ].ticker + ') was not filled. Cancelled and removed from orders.' )
 
-        if ( len( self.orders ) > 0 ):
+                    # Mark this order as cancelled so that we can remove it during garbage collection
+                    self.orders[ a_order[ 'id' ] ].order_id = ''
+
+            # Let's make sure we have the correct cash amount available for trading
+            self.available_cash = self.get_available_cash()
+            self.is_new_order_submitted = False
+
+        if ( len( self.orders ) > 0  ):
             print( '-- Assets -------------------------------' )
-
-            # Is any of our still orders not filled? (swing/miss)
-            # This variable is True if we bought or sold assets during the previous iteration
-            if ( self.is_new_order_submitted ):
-                try:
-                    open_orders = rh.get_all_open_crypto_orders()
-                except:
-                    print( 'An exception occurred while retrieving list of open orders.' )
-                    open_orders = []
-
-                for a_order in open_orders:
-                    if ( a_order[ 'id' ] in self.orders and self.cancel_order( a_order[ 'id' ] ) ):
-                        print( 'Order #' + str( a_order[ 'id' ] ) + ' (' + a_order[ 'side' ] + ' ' + a_asset.ticker + ') was not filled. Cancelled and removed from orders.' )
-
-                        # Mark this order as cancelled so that we can remove it during garbage collection
-                        self.orders[ a_order[ 'id' ] ] = ''
-
-                # Let's make sure we have the correct cash amount available for trading
-                self.available_cash = self.get_available_cash()
-                self.is_new_order_submitted = False
 
             for a_asset in list( self.orders.values() ):
                 if ( a_asset.quantity > 0.0 and a_asset.order_id != '' ):
@@ -394,6 +384,13 @@ class bot:
             for a_robinhood_ticker in config[ 'ticker_list' ].values():
                 if ( getattr( self.signal, 'buy_' + str(  config[ 'trade_signals' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ) ):
                     self.is_new_order_submitted = self.buy( a_robinhood_ticker ) or self.is_new_order_submitted
+
+        # Final status for this iteration
+        print( '-- Bot Status ---------------------------' )
+        print( 'Iteration completed on ' +str( datetime.now().strftime( '%Y-%m-%d %H:%M' ) ) )
+        print( 'Buying power: $' + str( self.available_cash ) )
+        print( '-- Data Snapshot ------------------------' )
+        print( self.data.tail() )
 
         # Save state
         with open( 'pickle/orders.pickle', 'wb' ) as f:
