@@ -20,9 +20,6 @@ class signals:
             data.iloc[ -2 ][ ticker + '_SMA_F' ] < data.iloc[ -2 ][ ticker + '_SMA_S' ]  and
             data.iloc[ -1 ][ ticker + '_SMA_F' ] >= data.iloc[ -1 ][ ticker + '_SMA_S' ]  and
             
-            # ... and they diverge
-            data.iloc[ -1 ][ ticker + '_SMA_F' ] - data.iloc[ -1 ][ ticker + '_SMA_S' ] >= data.iloc[ -2 ][ ticker + '_SMA_F' ] - data.iloc[ -2 ][ ticker + '_SMA_S' ] and
-            
             # RSI above threshold
             data.iloc[ -1 ][ ticker + '_RSI' ] > config[ 'rsi_threshold' ][ 'buy' ]
         )
@@ -64,9 +61,6 @@ class signals:
             # Fast-SMA crossed Slow-SMA from above
             data.iloc[ -2 ][ asset.ticker + '_SMA_F' ] > data.iloc[ -2 ][ asset.ticker + '_SMA_S' ]  and
             data.iloc[ -1 ][ asset.ticker + '_SMA_F' ] <= data.iloc[ -1 ][ asset.ticker + '_SMA_S' ]  and
-            
-            # ... and they diverge
-            data.iloc[ -1 ][ asset.ticker + '_SMA_S' ] - data.iloc[ -1 ][ asset.ticker + '_SMA_F' ] >= data.iloc[ -2 ][ asset.ticker + '_SMA_S' ] - data.iloc[ -2 ][ asset.ticker + '_SMA_F' ] and
             
             # RSI below threshold
             data.iloc[ -1 ][ asset.ticker + '_RSI' ] <= config[ 'rsi_threshold' ][ 'sell' ] and

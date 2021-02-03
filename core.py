@@ -1,11 +1,12 @@
 #!/usr/bin/python3 -u
 
 # Crypto Trading Bot
-# Version: 1.3.1
+# Version: 1.3.2
 # Credits: https://github.com/JasonRBowling/cryptoTradingBot/
 
 from config import config
-from signals import signals
+from classes.asset import asset
+from classes.signals import signals
 
 from datetime import datetime
 from math import floor
@@ -20,18 +21,6 @@ import robin_stocks as rh
 from talib import RSI, MACD
 from threading import Timer
 from time import sleep
-
-class asset:
-    ticker = ''
-    quantity = 0.0
-    price = 0.0
-    order_id = ''
-
-    def __init__( self, ticker = '', quantity = 0.0, price = 0.0, order_id = '' ):
-        self.ticker = ticker
-        self.quantity = float( quantity )
-        self.price = float( price )
-        self.order_id = order_id
 
 class bot:
     default_config = {
@@ -352,7 +341,7 @@ class bot:
                     print( 'Order #' + str( a_order[ 'id' ] ) + ' (' + a_order[ 'side' ] + ' ' + self.orders[ a_order[ 'id' ] ].ticker + ') was not filled. Cancelled and removed from orders.' )
 
                     # Mark this order as cancelled so that we can remove it during garbage collection
-                    self.orders[ a_order[ 'id' ] ].order_id = ''
+                    self.orders[ a_order[ 'id' ] ].quantity = 0
 
             # Let's make sure we have the correct cash amount available for trading
             self.available_cash = self.get_available_cash()
@@ -362,9 +351,9 @@ class bot:
             print( '-- Assets -------------------------------' )
 
             for a_asset in list( self.orders.values() ):
-                if ( a_asset.quantity > 0.0 and a_asset.order_id != '' ):
+                if ( a_asset.quantity > 0.0 ):
                     # Print a summary of all our assets
-                    print( str( a_asset.ticker ) + ': ' + str( a_asset.quantity ) + ' | Price: $' + str( round( a_asset.price, 3 ) ) + ' | Cost: $' + str( round( a_asset.quantity * a_asset.price, 3 ) ) + ' | Current value: $' + str( round( self.data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) )
+                    print( '[' + str( a_asset.order_id ) + '] ' + str( a_asset.ticker ) + ': ' + str( a_asset.quantity ) + ' | Price: $' + str( round( a_asset.price, 3 ) ) + ' | Cost: $' + str( round( a_asset.quantity * a_asset.price, 3 ) ) + ' | Current value: $' + str( round( self.data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) )
 
                     # Is it time to sell any of them? ( Stop-loss: is the current price below the purchase price by the percentage defined in the config file? )
                     if ( getattr( self.signal, 'sell_' + str(  config[ 'trade_signals' ][ 'sell' ] ) )( a_asset, self.data ) or ( self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ) ) ):
