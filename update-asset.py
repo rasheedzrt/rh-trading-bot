@@ -10,9 +10,9 @@ import sys
 
 orders = {}
 
-if path.exists( '../pickle/orders.pickle' ):
+if path.exists( 'pickle/orders.pickle' ):
     # Load assets
-    with open( '../pickle/orders.pickle', 'rb' ) as f:
+    with open( 'pickle/orders.pickle', 'rb' ) as f:
         orders = pickle.load( f )
 
 if ( len( sys.argv ) > 1 ):
@@ -49,7 +49,7 @@ if ( len( sys.argv ) > 1 ):
         # Print a summary of all our assets
         print( '[' + str( a_asset.order_id ) + '] ' + str( a_asset.ticker ) + ': ' + str( a_asset.quantity ) + ' | Price: $' + str( round( a_asset.price, 3 ) ) + ' | Cost: $' + str( round( a_asset.quantity * a_asset.price, 3 ) ) )
 
-    with open( '../pickle/orders.pickle', 'wb' ) as f:
+    with open( 'pickle/orders.pickle', 'wb' ) as f:
         pickle.dump( orders, f )
 
 else:
