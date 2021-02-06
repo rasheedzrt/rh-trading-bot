@@ -234,7 +234,6 @@ class bot:
     def get_new_data( self, now ):
         new_row = {}
 
-        self.is_trading_locked = False
         new_row[ 'timestamp' ] = now.strftime( "%Y-%m-%d %H:%M" )
 
         # Calculate moving averages and RSI values
@@ -247,8 +246,7 @@ class bot:
                         new_row[ a_robinhood_ticker ] = round( float( result[ 'result' ][ a_kraken_ticker ][ 'a' ][ 0 ] ), 3 )
                 except:
                     print( 'An exception occurred retrieving prices.' )
-                    self.is_trading_locked = True
-                    return self.data
+                    return False
             else:
                 new_row[ a_robinhood_ticker ] = round( float( randint( 1, 100000 ) ), 3 )
 
@@ -256,8 +254,7 @@ class bot:
             percent_diff = ( abs( new_row[ a_robinhood_ticker ] - self.data.iloc[ -1 ][ a_robinhood_ticker ] ) / self.data.iloc[ -1 ][ a_robinhood_ticker ] ) * 100
             if ( percent_diff > 40 ):
                 print( 'Error: new price ($' + str( new_row[ a_robinhood_ticker ] ) + ') differs ' + str( round( percent_diff, 2 ) ) + '% from previous value, ignoring.' )
-                self.is_trading_locked = True
-                return self.data
+                return False
 
             self.data = self.data.append( new_row, ignore_index = True )
 
@@ -265,6 +262,7 @@ class bot:
             if ( ( self.data.tail( 4 )[ a_robinhood_ticker ].to_numpy()[ -1 ] == self.data.tail( 4 )[ a_robinhood_ticker ].to_numpy() ).all() ):
                 print( 'Repeating values detected for ' + str( a_robinhood_ticker ) + '. Ignoring data point.' )
                 self.data = self.data[:-1]
+
             elif ( self.data.shape[ 0 ] > 0 ):
                 self.data[ a_robinhood_ticker + '_SMA_F' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_fast' ] ).mean()
                 self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
@@ -280,7 +278,7 @@ class bot:
                 self.save_chart_rescale( [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_RSI' ], str( a_robinhood_ticker ) + '_rsi' )
                 self.save_chart_rescale( [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_MACD', str( a_robinhood_ticker ) + '_MACD_S' ], str( a_robinhood_ticker ) + '_macd' )
 
-        return self.data
+        return True
 
     def get_available_cash( self ):
         available_cash = -1.0
@@ -358,13 +356,12 @@ class bot:
 
     def run( self ):
         now = datetime.now()
-        self.data = self.get_new_data( now )
+
+        # We don't have enough consecutive data points to decide what to do
+        self.is_trading_locked = not self.is_data_consistent( now ) or not self.get_new_data( now )
 
         # Schedule the next iteration
         Timer( config[ 'minutes_between_updates' ] * 60, self.run ).start()
-
-        # We don't have enough consecutive data points to decide what to do
-        self.is_trading_locked = not self.is_data_consistent( now )
         
         # Is any of our still orders not filled? (swing/miss)
         # This variable is True if we bought or sold assets during the previous iteration
