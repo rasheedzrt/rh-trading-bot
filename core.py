@@ -250,7 +250,14 @@ class bot:
                     self.is_trading_locked = True
                     return self.data
             else:
-                new_row[ a_robinhood_ticker ] = round( float( randint( 10, 100 ) ), 3 )
+                new_row[ a_robinhood_ticker ] = round( float( randint( 1, 100000 ) ), 3 )
+
+            # If the new price is more than 40% lower/higher than the previous reading, assume it's an error somewhere
+            percent_diff = ( abs( new_row[ a_robinhood_ticker ] - self.data.iloc[ -1 ][ a_robinhood_ticker ] ) / self.data.iloc[ -1 ][ a_robinhood_ticker ] ) * 100
+            if ( percent_diff > 40 ):
+                print( 'Error: new price differs ' + str( round( percent_diff, 2 ) ) + '% from previous value, ignoring.' )
+                self.is_trading_locked = True
+                return self.data
 
             self.data = self.data.append( new_row, ignore_index = True )
 
@@ -361,7 +368,7 @@ class bot:
         
         # Is any of our still orders not filled? (swing/miss)
         # This variable is True if we bought or sold assets during the previous iteration
-        if ( self.is_new_order_submitted ):
+        if ( self.is_new_order_submitted and not config[ 'simulate_api_calls' ] ):
             print( 'Checking open orders')
             try:
                 open_orders = rh.get_all_open_crypto_orders()
