@@ -1,7 +1,7 @@
 #!/usr/bin/python3 -u
 
 # Crypto Trading Bot
-# Version: 1.3.2
+# Version: 1.3.3
 # Credits: https://github.com/JasonRBowling/cryptoTradingBot/
 
 from config import config
@@ -18,7 +18,7 @@ import pickle
 from random import randint
 from requests import get as get_json
 import robin_stocks as rh
-from talib import RSI, MACD
+from talib import EMA, RSI, MACD
 from threading import Timer
 from time import sleep
 
@@ -143,6 +143,8 @@ class bot:
                 # Calculate the indicators
                 self.data[ a_robinhood_ticker + '_SMA_F' ] = self.data[ a_robinhood_ticker ].shift( 1 ).rolling( window = config[ 'moving_average_periods' ][ 'sma_fast' ] ).mean()
                 self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].shift( 1 ).rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
+                self.data[ a_robinhood_ticker + '_EMA_S' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_fast' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_fast' ]).mean()
+                self.data[ a_robinhood_ticker + '_EMA_F' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_slow' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_slow' ]).mean()
                 self.data[ a_robinhood_ticker + '_RSI' ] = RSI( self.data[ a_robinhood_ticker ].values, timeperiod = config[ 'rsi_period' ] )
                 self.data[ a_robinhood_ticker + '_MACD' ], self.data[ a_robinhood_ticker + '_MACD_S' ], macd_hist = MACD( self.data[ a_robinhood_ticker ].values, fastperiod = config[ 'moving_average_periods' ][ 'macd_fast' ], slowperiod = config[ 'moving_average_periods' ][ 'macd_slow' ], signalperiod = config[ 'moving_average_periods' ][ 'macd_signal' ] )
 
@@ -196,6 +198,39 @@ class bot:
 
         return True
 
+    def save_chart( self, columns, label ):
+        if ( len( columns ) < 1 ):
+            return False
+
+        slice = self.data.loc[:, [ 'timestamp' ] + columns ]
+        slice[ 'timestamp' ] = [ datetime.strptime( x, '%Y-%m-%d %H:%M').strftime( "%d@%H:%M" ) for x in slice[ 'timestamp' ] ]
+        fig = slice.plot( x = 'timestamp', xlabel = 'Time', ylabel = '', figsize = ( 15, 5 ), fontsize = 13, linewidth = 0.8, alpha = 0.6 )
+        fig.lines[ 0 ].set_alpha( 1 )
+        fig.grid( linestyle = 'dotted', linewidth = '0.5' )
+        fig = fig.get_figure()
+        fig.savefig( 'charts/chart_' + str( label ).lower() + '.png', dpi = 300 )
+        plt.close( fig )
+
+    def save_chart_rescale( self, columns, label ):
+        if ( len( columns ) < 1 ):
+            return False
+
+        ax = {}
+        slice = self.data.loc[:, [ 'timestamp' ] + columns ]
+        slice[ 'timestamp' ] = [ datetime.strptime( x, '%Y-%m-%d %H:%M').strftime( "%d@%H:%M" ) for x in slice[ 'timestamp' ] ]
+
+        fig = plt.figure( figsize = ( 15, 5 ), dpi = 300 )
+        fig.subplots_adjust( right = 1 - ( len( columns ) * 0.1 ) )
+        ax[ 0 ] = fig.add_subplot()
+        slice[ columns[ 0 ] ].plot( x = 'timestamp', xlabel = '', ylabel = columns[ 0 ], ax=ax[ 0 ], fontsize = 13, linewidth = 0.8 )
+        for idx in range( 1, len( columns ) ):
+            ax[ idx + 1 ] = ax[ 0 ].twinx()
+            ax[ idx + 1 ].spines[ 'right' ].set_position(( 'axes', 1 + idx * 0.1 ) )
+            slice[ columns[ idx ] ].plot( x = 'timestamp', xlabel = '', ylabel = columns[ idx ], ax=ax[ idx + 1 ], fontsize = 13, linewidth = 0.8, color = 'C' + str( idx ) )
+
+        plt.savefig( 'charts/chart_' + str( label ).lower() + '.png' )
+        plt.close( fig )
+
     def get_new_data( self, now ):
         new_row = {}
 
@@ -224,21 +259,19 @@ class bot:
                 print( 'Repeating values detected for ' + str( a_robinhood_ticker ) + '. Ignoring data point.' )
                 self.data = self.data[:-1]
             elif ( self.data.shape[ 0 ] > 0 ):
-                self.data[ a_robinhood_ticker + '_SMA_F' ] = self.data[ a_robinhood_ticker ].shift( 1 ).rolling( window = config[ 'moving_average_periods' ][ 'sma_fast' ] ).mean()
-                self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].shift( 1 ).rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
+                self.data[ a_robinhood_ticker + '_SMA_F' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_fast' ] ).mean()
+                self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
+                self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
+                self.data[ a_robinhood_ticker + '_EMA_S' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_fast' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_fast' ]).mean()
+                self.data[ a_robinhood_ticker + '_EMA_F' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_slow' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_slow' ]).mean()
                 self.data[ a_robinhood_ticker + '_RSI' ] = RSI( self.data[ a_robinhood_ticker ].values, timeperiod = config[ 'rsi_period' ] )
                 self.data[ a_robinhood_ticker + '_MACD' ], self.data[ a_robinhood_ticker + '_MACD_S' ], macd_hist = MACD( self.data[ a_robinhood_ticker ].values, fastperiod = config[ 'moving_average_periods' ][ 'macd_fast' ], slowperiod = config[ 'moving_average_periods' ][ 'macd_slow' ], signalperiod = config[ 'moving_average_periods' ][ 'macd_signal' ] )
 
             if ( config[ 'save_charts' ] == True ):
-                slice = self.data.loc[:, [ 'timestamp', a_robinhood_ticker, str( a_robinhood_ticker ) + '_SMA_F', str( a_robinhood_ticker ) + '_SMA_S' ] ]
-                slice[ 'timestamp' ] = [ datetime.strptime( x, '%Y-%m-%d %H:%M').strftime( "%d@%H:%M" ) for x in slice[ 'timestamp' ] ]
-                fig = slice.plot( x = 'timestamp', xlabel = 'Time', ylabel = 'Price', figsize = ( 15, 5 ), fontsize = 13, linewidth = 0.8 )
-                fig.lines[ 1 ].set_alpha( 0.6 )
-                fig.lines[ 2 ].set_alpha( 0.6 )
-                fig.grid( linestyle = 'dotted', linewidth = '0.5' )
-                fig = fig.get_figure()
-                fig.savefig( 'charts/chart-' + str( a_robinhood_ticker ).lower() + '-sma.png', dpi = 300 )
-                plt.close( fig )
+                self.save_chart( [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_SMA_F', str( a_robinhood_ticker ) + '_SMA_S' ], str( a_robinhood_ticker ) + '_sma' )
+                self.save_chart( [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_EMA_F', str( a_robinhood_ticker ) + '_EMA_S' ], str( a_robinhood_ticker ) + '_ema' )
+                self.save_chart_rescale( [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_RSI' ], str( a_robinhood_ticker ) + '_rsi' )
+                self.save_chart_rescale( [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_MACD', str( a_robinhood_ticker ) + '_MACD_S' ], str( a_robinhood_ticker ) + '_macd' )
 
         return self.data
 

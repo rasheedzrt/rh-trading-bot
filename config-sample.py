@@ -13,6 +13,8 @@ config = {
     'moving_average_periods': { # data points needed to calculate SMA fast, SMA slow, MACD fast, MACD slow, MACD signal
         'sma_fast': 12, # 12 data points per hour 
         'sma_slow': 48,
+        'ema_fast': 12,
+        'ema_slow': 48,
         'macd_fast': 12,
         'macd_slow': 26,
         'macd_signal': 7
