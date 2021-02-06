@@ -143,8 +143,8 @@ class bot:
                 # Calculate the indicators
                 self.data[ a_robinhood_ticker + '_SMA_F' ] = self.data[ a_robinhood_ticker ].shift( 1 ).rolling( window = config[ 'moving_average_periods' ][ 'sma_fast' ] ).mean()
                 self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].shift( 1 ).rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
-                self.data[ a_robinhood_ticker + '_EMA_S' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_fast' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_fast' ]).mean()
-                self.data[ a_robinhood_ticker + '_EMA_F' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_slow' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_slow' ]).mean()
+                self.data[ a_robinhood_ticker + '_EMA_F' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_fast' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_fast' ]).mean()
+                self.data[ a_robinhood_ticker + '_EMA_S' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_slow' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_slow' ]).mean()
                 self.data[ a_robinhood_ticker + '_RSI' ] = RSI( self.data[ a_robinhood_ticker ].values, timeperiod = config[ 'rsi_period' ] )
                 self.data[ a_robinhood_ticker + '_MACD' ], self.data[ a_robinhood_ticker + '_MACD_S' ], macd_hist = MACD( self.data[ a_robinhood_ticker ].values, fastperiod = config[ 'moving_average_periods' ][ 'macd_fast' ], slowperiod = config[ 'moving_average_periods' ][ 'macd_slow' ], signalperiod = config[ 'moving_average_periods' ][ 'macd_signal' ] )
 
@@ -262,8 +262,8 @@ class bot:
                 self.data[ a_robinhood_ticker + '_SMA_F' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_fast' ] ).mean()
                 self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
                 self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
-                self.data[ a_robinhood_ticker + '_EMA_S' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_fast' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_fast' ]).mean()
-                self.data[ a_robinhood_ticker + '_EMA_F' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_slow' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_slow' ]).mean()
+                self.data[ a_robinhood_ticker + '_EMA_F' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_fast' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_fast' ]).mean()
+                self.data[ a_robinhood_ticker + '_EMA_S' ] = self.data[ a_robinhood_ticker ].ewm( span = config[ 'moving_average_periods' ][ 'ema_slow' ], adjust = False, min_periods = config[ 'moving_average_periods' ][ 'ema_slow' ]).mean()
                 self.data[ a_robinhood_ticker + '_RSI' ] = RSI( self.data[ a_robinhood_ticker ].values, timeperiod = config[ 'rsi_period' ] )
                 self.data[ a_robinhood_ticker + '_MACD' ], self.data[ a_robinhood_ticker + '_MACD_S' ], macd_hist = MACD( self.data[ a_robinhood_ticker ].values, fastperiod = config[ 'moving_average_periods' ][ 'macd_fast' ], slowperiod = config[ 'moving_average_periods' ][ 'macd_slow' ], signalperiod = config[ 'moving_average_periods' ][ 'macd_signal' ] )
 
