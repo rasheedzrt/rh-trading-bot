@@ -255,7 +255,7 @@ class bot:
             # If the new price is more than 40% lower/higher than the previous reading, assume it's an error somewhere
             percent_diff = ( abs( new_row[ a_robinhood_ticker ] - self.data.iloc[ -1 ][ a_robinhood_ticker ] ) / self.data.iloc[ -1 ][ a_robinhood_ticker ] ) * 100
             if ( percent_diff > 40 ):
-                print( 'Error: new price differs ' + str( round( percent_diff, 2 ) ) + '% from previous value, ignoring.' )
+                print( 'Error: new price ($' + str( new_row[ a_robinhood_ticker ] ) + ') differs ' + str( round( percent_diff, 2 ) ) + '% from previous value, ignoring.' )
                 self.is_trading_locked = True
                 return self.data
 
