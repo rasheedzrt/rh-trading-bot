@@ -6,7 +6,7 @@ config = {
     'ticker_list': { # list of coin ticker pairs Kraken/Robinhood (XETHZUSD/ETH, etc) - https://api.kraken.com/0/public/AssetPairs
         'XETHZUSD': 'ETH'
     }, 
-    'trade_signals': { # select which strategies would you like the bot to use (buy, sell); see documentation for more info
+    'trade_signals': { # select which strategies to use (buy, sell); see classes/signals.py for more info
         'buy': 'sma_rsi_threshold',
         'sell': 'above_buy'
     },
