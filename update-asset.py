@@ -20,7 +20,7 @@ if ( len( sys.argv ) > 1 ):
         try:
             orders[ str( len( orders ) ) ] = asset( sys.argv[ 2 ], sys.argv[ 3 ], sys.argv[ 4 ], str( len( orders ) ) )
         except:
-            print( 'Syntax: asset.py add ticker quantity price' )
+            print( 'Syntax: update-asset.py add ticker quantity price' )
             exit()
 
     elif ( sys.argv[ 1 ] == 'remove' ):
@@ -41,7 +41,7 @@ if ( len( sys.argv ) > 1 ):
         exit()
 
     else:
-        print( 'Syntax: asset.py [add|remove|list] [ticker|asset_id] [quantity] [price]' )
+        print( 'Syntax: update-asset.py [add|remove|list] [ticker|asset_id] [quantity] [price]' )
         exit()
 
     print( 'New Asset List:' )
@@ -53,4 +53,4 @@ if ( len( sys.argv ) > 1 ):
         pickle.dump( orders, f )
 
 else:
-    print( 'Syntax: asset.py [add|remove|list] [ticker|asset_id] [quantity] [price]' )
+    print( 'Syntax: update-asset.py [add|remove|list] [ticker|asset_id] [quantity] [price]' )
