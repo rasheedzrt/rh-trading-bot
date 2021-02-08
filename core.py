@@ -324,9 +324,14 @@ class bot:
 
                 # Add this new asset to our orders
                 self.orders[ buy_info[ 'id' ] ] = asset( ticker, quantity, price, buy_info[ 'id' ] )
+
+                # Update the available cash for trading
+                self.available_cash = round( self.available_cash - quantity * price, 3 )
             except:
-                print( 'Got exception trying to buy, aborting.' )
+                print( 'Got exception trying to buy.' )
                 return False
+        else:
+            print( '## Would have bought ' + str( ticker ) + ' ' + str( quantity ) + ' at $' + str( price ) + ', if trades were enabled' )
 
         return True
 
@@ -351,6 +356,8 @@ class bot:
             except:
                 print( 'Got exception trying to sell, aborting.' )
                 return False
+        else:
+            print( '## Would have sold ' + str( asset.ticker ) + ' ' + str( asset.quantity ) + ' for $' + str( price ) + ', if trades were enabled' )
 
         return True
 
@@ -379,6 +386,9 @@ class bot:
 
                     # Mark this order as cancelled so that we can remove it during garbage collection
                     self.orders[ a_order[ 'id' ] ].quantity = 0
+                    
+                    # Let the system process this transaction and update the buying power
+                    sleep( 10 )
 
             # Let's make sure we have the correct cash amount available for trading
             self.available_cash = self.get_available_cash()
