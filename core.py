@@ -365,7 +365,7 @@ class bot:
         now = datetime.now()
 
         # We don't have enough consecutive data points to decide what to do
-        self.is_trading_locked = not self.is_data_consistent( now ) or not self.get_new_data( now )
+        self.is_trading_locked = not self.get_new_data( now ) or not self.is_data_consistent( now )
 
         # Schedule the next iteration
         Timer( config[ 'minutes_between_updates' ] * 60, self.run ).start()
