@@ -332,6 +332,7 @@ class bot:
                 return False
         else:
             print( '## Would have bought ' + str( ticker ) + ' ' + str( quantity ) + ' at $' + str( price ) + ', if trades were enabled' )
+            return False
 
         return True
 
@@ -358,6 +359,7 @@ class bot:
                 return False
         else:
             print( '## Would have sold ' + str( asset.ticker ) + ' ' + str( asset.quantity ) + ' for $' + str( price ) + ', if trades were enabled' )
+            return False
 
         return True
 
