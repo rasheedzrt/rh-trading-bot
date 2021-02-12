@@ -11,7 +11,7 @@ start() {
         BOTPID=`ps -ef | grep '/usr/bin/python[3] -u ./core.py' | awk '{ print $2 }'`
         echo "[PID:$BOTPID] Bot started."
     else
-        echo "Bot already running."
+        echo "Bot already running. Did you mean 'restart'?"
     fi
 }
  

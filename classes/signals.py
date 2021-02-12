@@ -89,6 +89,28 @@ class signals:
             data.iloc[ -1 ][ asset.ticker ] >= asset.price + (  asset.price * config[ 'profit_percentage' ] )
         )
 
+    def sell_price_ema_crossover_rsi( self, asset, data ):
+        # Exponential Moving Average Crossover with RSI Filter
+
+        return(        
+            # Make sure the data is valid
+            not isnan( data.iloc[ -1 ][ asset.ticker + '_EMA_F' ] ) and
+            not isnan( data.iloc[ -2 ][ asset.ticker + '_EMA_F' ] ) and
+            not isnan( data.iloc[ -1 ][ asset.ticker + '_EMA_S' ] ) and
+            not isnan( data.iloc[ -2 ][ asset.ticker + '_EMA_S' ] ) and
+            not isnan( data.iloc[ -1 ][ asset.ticker + '_RSI' ] ) and
+
+            # Price crossed Slow-EMA from above
+            data.iloc[ -2 ][ asset.ticker ] > data.iloc[ -2 ][ asset.ticker + '_EMA_S' ]  and
+            data.iloc[ -1 ][ asset.ticker ] <= data.iloc[ -1 ][ asset.ticker + '_EMA_S' ]  and
+            
+            # RSI below threshold
+            data.iloc[ -1 ][ asset.ticker + '_RSI' ] <= config[ 'rsi_threshold' ][ 'sell' ] and
+
+            # Price is higher than purchase price by at least profit percentage
+            data.iloc[ -1 ][ asset.ticker ] >= asset.price + (  asset.price * config[ 'profit_percentage' ] )
+        )
+
     def sell_sma_crossover_rsi( self, asset, data ):
         # Simple Moving Average Crossover with RSI Filter
         # Credits: https://trader.autochartist.com/moving-average-crossover-with-rsi-filter/
