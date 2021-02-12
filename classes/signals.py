@@ -94,8 +94,6 @@ class signals:
 
         return(        
             # Make sure the data is valid
-            not isnan( data.iloc[ -1 ][ asset.ticker + '_EMA_F' ] ) and
-            not isnan( data.iloc[ -2 ][ asset.ticker + '_EMA_F' ] ) and
             not isnan( data.iloc[ -1 ][ asset.ticker + '_EMA_S' ] ) and
             not isnan( data.iloc[ -2 ][ asset.ticker + '_EMA_S' ] ) and
             not isnan( data.iloc[ -1 ][ asset.ticker + '_RSI' ] ) and
