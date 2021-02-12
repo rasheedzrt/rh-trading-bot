@@ -316,9 +316,8 @@ class bot:
         quantity = ( self.available_cash if ( config[ 'buy_amount_per_trade' ] == 0 ) else config[ 'buy_amount_per_trade' ] ) / price
         quantity = round( floor( quantity / self.min_share_increments[ ticker ] ) * self.min_share_increments[ ticker ], 7 )
 
-        print( '## Buying ' + str( ticker ) + ' ' + str( quantity ) + ' at $' + str( price ) )
-
         if ( config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ] ):
+            print( '## Buying ' + str( ticker ) + ' ' + str( quantity ) + ' at $' + str( price ) )
             try:
                 buy_info = rh.order_buy_crypto_limit( str( ticker ), quantity, price )
 
@@ -346,9 +345,8 @@ class bot:
         price = round( floor( self.data.iloc[ -1 ][ asset.ticker ] / self.min_price_increments[ asset.ticker ] ) * self.min_price_increments[ asset.ticker ], 7 )
         profit = round( ( asset.quantity * price ) - ( asset.quantity * asset.price ), 3 )
 
-        print( '## Selling ' + str( asset.ticker ) + ' ' + str( asset.quantity ) + ' for $' + str( price ) + ' (profit: $' + str( profit ) + ')' )
-
         if ( config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ] ):
+            print( '## Selling ' + str( asset.ticker ) + ' ' + str( asset.quantity ) + ' for $' + str( price ) + ' (profit: $' + str( profit ) + ')' )
             try:
                 sell_info = rh.order_sell_crypto_limit( str( asset.ticker ), asset.quantity, price )
 

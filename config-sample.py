@@ -3,6 +3,7 @@ config = {
     'password': "",
     'trades_enabled': False, # if False, just collect data
     'simulate_api_calls': False, # if enabled, just pretend to connect to Robinhood
+
     'ticker_list': { # list of coin ticker pairs Kraken/Robinhood (XETHZUSD/ETH, etc) - https://api.kraken.com/0/public/AssetPairs
         'XETHZUSD': 'ETH'
     }, 
