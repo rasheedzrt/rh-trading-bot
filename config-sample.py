@@ -30,7 +30,9 @@ config = {
     'buy_amount_per_trade': 0, # if greater than zero, buy this amount of coin, otherwise use all the cash in the account
     'reserve': 0.0, # tell the bot if you don't want it to use all of the available cash in your account
     'stop_loss_threshold': 0.3,   # sell if the price drops at least 30% below the purchase price
+
     'minutes_between_updates': 5, # 1 (default), 5, 15, 30, 60, 240, 1440, 10080, 21600
+    'cancel_order_after_minutes': 20, # how long to wait before cancelling an order that hasn't been filled
     'save_charts': True,
     'max_data_rows': 2000
 }
