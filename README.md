@@ -28,6 +28,7 @@ Once you have all the dependencies in place, clone this repo somewhere on your m
 * (float) `reserve`: By default, the bot will try to use all the funds available in your account to buy crypto; use this value if you want to set aside a given amount that the bot should not spend
 * (float) `stop_loss_threshold`: Threshold below which the bot will sell its holdings, regardless of any gains
 * (int) `minutes_between_updates`: How often should the bot spring into action (1 (default), 5, 15, 30, 60, 240, 1440, 10080, 21600)
+* (int) `cancel_order_after_minutes`: How long to wait before cancelling an order that hasn't been filled
 * (bool) `save_charts`: Enable this feature to have the bot save SMA charts for each coin it's handling
 * (int) `max_data_rows`: Max number of data points to store in the Pickle file (if you have issues with memory limits on your machine). 1k rows = 70kB
 
@@ -51,22 +52,30 @@ The overall flow looks like this:
 A summary of each iteration is logged in `status.log`. The bot maintains a list of purchased assets (saved as `orders.pickle`) and at each iteration, it determines if the conditions to sell any of them are met. It also handles swing and miss orders, by checking if any of the orders placed during the previous iteration are still pending (not filled), and cancels them. The typical output should resemble this format:
 
 ```
--- Bot Status ---------------------------
-Iteration completed on 2021-02-01 15:25
-Buying power: $448.49
--- Data Snapshot ------------------------
-             timestamp      ETH    ETH_SMA_F    ETH_SMA_S    ETH_RSI  ETH_MACD  ETH_MACD_S
-1867  2021-02-01 15:09  1338.28  1330.445000  1319.163125  74.024414  4.163829    3.842706
-1868  2021-02-01 15:14  1339.00  1331.281667  1319.811042  74.806159  4.450957    3.994769
-1869  2021-02-01 15:19  1339.00  1332.134167  1320.424167  74.806159  4.625192    4.152375
-1870  2021-02-01 15:24  1337.01  1333.000833  1321.011667  68.224578  4.550246    4.251843
-1871  2021-02-01 15:25  1337.01  1333.640000  1321.655208  68.224578  4.439672    4.298800
 -- Assets -------------------------------
-ETH: 0.071683 | Price: $1395.03 | Cost: $100.0 | Current value: $95.841
-ETH: 0.302484 | Price: $1322.38 | Cost: $399.999 | Current value: $404.424
+Status      Date/Time         Ticker  Quantity      Price         Value       
+bought      2021-02-14 19:05  ETH     0.137844      1813.52       249.983      236.707
+bought      2021-02-14 22:34  ETH     0.11562       1730.07       200.031      198.544     
+-- Bot Status ---------------------------
+Iteration completed on 2021-02-14 22:35
+Buying power: $72.16
+-- Data Snapshot ------------------------
+            timestamp      ETH    ETH_SMA_F    ETH_SMA_S    ETH_EMA_F    ETH_EMA_S    ETH_RSI   ETH_MACD  ETH_MACD_S
+716  2021-02-14 22:15  1729.44  1714.160833  1774.263958  1726.469599  1762.900429  44.195377 -16.042274  -19.536207
+717  2021-02-14 22:20  1732.11  1715.958333  1772.408333  1727.337353  1761.643677  45.385415 -14.404011  -18.253158
+718  2021-02-14 22:25  1733.01  1719.655000  1770.625417  1728.210068  1760.474956  45.804948 -12.884528  -16.911001
+719  2021-02-14 22:30  1735.00  1723.598333  1768.922083  1729.254673  1759.435162  46.778458 -11.388472  -15.530368
+720  2021-02-14 22:35  1732.21  1726.805000  1767.253125  1729.709339  1758.323931  45.543249 -10.309129  -14.225058
 ```
 
-The "Bot Status" section shows the available cash amount that can be used to buys new assets. Next you'll see a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings. Last but least, the "Assets" section, if present, lists all the purchased assets the bot is managing for you, along with their purchase price, cost and current value.
+The "Assets" section, if present, lists all the assets the bot is managing for you, along with their purchase price, cost and current value. If the "Status" column for a given order reads `new`, it means that this order was recently placed and hasn't been confirmed yet. In order to avoid too many requests to the Robinhood API, the bot will check after a given amount of time (see config param `cancel_order_after_minutes`) if the order was filled or not, and either confirm it or cancel it. The "Bot Status" section shows the available cash amount that can be used to buys new assets. Last but not least, you'll see a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings.
+
+## Manually adding orders
+You may have bought some coins on your own, maybe because you saw an excellent opportunity to buy a dip, and now would like the bot to monitor those new assets and sell them when the conditions are more favorable. Or viceversa, your algorithm did not catch a sudden increase and you decided to sell an asset on your own. For situations like these, I've added a simple Python script that you can run directly as a shell command. It accepts the following parameters:
+
+* ./manage-assets.py **buy** _ticker quantity price_ (for example: `./manage-assets.py buy ETH 1.0 1000` will add a new order of 1 ETH purchased at $1,000)
+* ./manage.assets.py **sell** asset_id sale_price (for example: `./manage.assets.py sell e2af-ccf52-f115d9-1ee9b 1200` will mark the corresponding asset as sold at $1,200)
+* ./manage-assets.py **list** will display a list of the order log
 
 ## Charts
 How does the saying go? A picture is always worth a thousand words, ehm... data points. For each coin you track, a line chart will be refreshed at each iteration (and saved in the `charts` folder), summarizing the current state and the SMA indicators. 
