@@ -21,7 +21,7 @@ Once you have all the dependencies in place, clone this repo somewhere on your m
 * (dict) `trade_signals`: Select which strategies to use (buy, sell); see _signals.py_ for a list of available methods (omit the *buy_*/*sell_* method prefix when passing the value here: buy_sma_crossover_rsi -> sma_crossover_rsi)
 * (float) `buy_below_moving_average`: Used by one of the built-in signals (sma_rsi_threshold), if the price dips below the MA by this percentage, and if the RSI is below the oversold threshold (see below), it will try to buy
 * (float) `sell_above_buy_price`: Used by some of the sell signals, once the price rises above the Buy price by this percentage, it will try to sell
-* (float) `buy_amount_per_trade`: If greater than zero, buy this amount of coin, otherwise use all the cash in the account
+* (float) `buy_amount_per_trade`: If greater than zero, buy this amount of dollars, otherwise use all the cash in the account
 * (dict) `moving_average_periods`: Number of MA observations to wait before sprinting into action, for each measure (SMA fast, SMA slow, MACD fast, MACD slow, MACD signal)
 * (int) `rsi_period`: Length of the observation window for calculating the RSI
 * (float) `rsi_buy_threshold`: Threshold below which the bot will try to buy
