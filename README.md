@@ -7,6 +7,9 @@ I've been wanting to play around with algotraders for a while now. After some in
 ## Disclaimer
 To use Jason's words: cryptocurrency investing is *risky*! Doing it using a computer program is even riskier. Doing it with code you didn’t write is a _terrible_ idea. What you do with this code is entirely up to you, and any risks you take are your own. It’s intended to be educational and comes with absolutely no guarantee of anything at all. You could lose all your money. Seriously.
 
+## Why Robinhood?
+For U.S. customers, most of the exchanges available out there require a complex verification process, and on top of that they won't allow direct ACH deposits from your bank accounts (have you seen how cumbersome it is to transfer funds to your Kraken account?). Or the ones that do, provide limited API access to work with bots. By combining Kraken's performance with Robinhood's ease of use, I thought this would put the best of both worlds to good use.
+
 ## Installation
 You'll need access to a working Python3 interpreter. For the sake of simplicity, I am going to assume that you know your way around a Linux shell, and that you have [pip3](https://linuxize.com/post/how-to-install-pip-on-ubuntu-18.04/#installing-pip-for-python-3) on your machine. Install the following dependencies:
 * [Robin-Stock](http://www.robin-stocks.com/en/latest/quickstart.html): `pip3 install robin_stocks`
