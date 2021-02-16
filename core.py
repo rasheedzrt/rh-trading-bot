@@ -1,7 +1,7 @@
 #!/usr/bin/python3 -u
 
 # Crypto Trading Bot
-# Version: 1.4
+# Version: 1.4.1
 # Credits: https://github.com/JasonRBowling/cryptoTradingBot/
 
 from config import config
@@ -51,7 +51,7 @@ class bot:
         'reserve': 0.0,
         'stop_loss_threshold': 0.3,
         'minutes_between_updates': 5,
-        'cancel_order_after_minutes': 20,
+        'cancel_pending_after_minutes': 20,
         'save_charts': True,
         'max_data_rows': 10000
     }
@@ -74,14 +74,14 @@ class bot:
         print( '-- Configuration ------------------------' )
         for c in self.default_config:
             isDefined = config.get( c )
-            if ( not isDefined ):
+            if not isDefined:
                 config[ c ] = self.default_config[ c ]
 
-        if ( not config[ 'username' ] or not config[ 'password' ] ):
+        if not config[ 'username' ] or not config[ 'password' ]:
             print( 'RobinHood credentials not found in config file. Aborting.' )
             exit()
 
-        if ( config[ 'rsi_period' ] > config[ 'moving_average_periods' ][ 'sma_fast' ] ):
+        if config[ 'rsi_period' ] > config[ 'moving_average_periods' ][ 'sma_fast' ]:
             self.min_consecutive_samples = config[ 'rsi_period' ]
         else:
             self.min_consecutive_samples = config[ 'moving_average_periods' ][ 'sma_fast' ]
@@ -95,10 +95,10 @@ class bot:
         print( '-- Init Environment ---------------------' )
 
         # Initialize folders where to store data and charts
-        if ( not path.exists( 'pickle' ) ):
+        if not path.exists( 'pickle' ):
             makedirs( 'pickle' )
 
-        if ( not path.exists( 'charts' ) ):
+        if not path.exists( 'charts' ):
             makedirs( 'charts' )
 
         if path.exists( 'pickle/orders.pickle' ):
@@ -111,12 +111,12 @@ class bot:
             print( 'No state saved, starting from scratch' )
 
         # Load data points
-        if ( path.exists( 'pickle/dataframe.pickle' ) ):
+        if path.exists( 'pickle/dataframe.pickle' ):
             print( 'Loading saved dataset' )
             self.data = pd.read_pickle( 'pickle/dataframe.pickle' )
 
         # Connect to Robinhood
-        if ( not config[ 'simulate_api_calls' ] ):
+        if not config[ 'simulate_api_calls' ]:
             try:
                 print( 'Logging in to Robinhood' )
                 rh_response = rh.login( config[ 'username' ], config[ 'password' ] )
@@ -126,7 +126,7 @@ class bot:
 
         # Download Robinhood parameters
         for a_robinhood_ticker in config[ 'ticker_list' ].values():
-            if ( not config[ 'simulate_api_calls' ] ):
+            if not config[ 'simulate_api_calls' ]:
                 try:
                     result = rh.get_crypto_info( a_robinhood_ticker )
                     self.min_share_increments.update( { a_robinhood_ticker: float( result[ 'min_order_quantity_increment' ] ) } )
@@ -139,7 +139,7 @@ class bot:
                 self.min_price_increments.update( { a_robinhood_ticker: 0.0001 } )
 
         # How much cash do we have?
-        self.available_cash = self.get_available_cash()
+        self.update_available_cash()
 
         # Install signal handlers
         signal.signal( signal.SIGTERM, self.handle_exit )
@@ -155,19 +155,18 @@ class bot:
         # We don't have enough consecutive data points to decide what to do
         self.is_trading_locked = not self.get_new_data( now )
         
-        if ( len( self.orders ) > 0  ):
+        if len( self.orders ) > 0:
             print( '-- Assets -------------------------------' )
 
             # Is any of our orders not filled? (swing/miss)
             pending_orders = []
             is_table_header_printed = False
             for a_asset in self.orders.values():
-                timediff = now - a_asset.timestamp
-                if ( a_asset.status == 'new' ):
+                if a_asset.status in [ 'PB', 'PS' ]:
                     print( 'Checking pending orders' )
 
                     # Retrieve the list of pending orders, if we haven't already
-                    if ( len( pending_orders ) == 0 and config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ] ):
+                    if len( pending_orders ) == 0 and config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ]:
                         try:
                             pending_orders = rh.get_all_open_crypto_orders()
                         except:
@@ -176,42 +175,36 @@ class bot:
 
                     # Is this order still pending?
                     for a_order in pending_orders:
-                        if ( a_order[ 'id' ] == a_asset.order_id ):
+                        if a_order[ 'id' ] == a_asset.order_id:
                             # Mark this order as cancelled so that we can remove it during garbage collection
-                            a_asset.status = 'to_cancel'
+                            a_asset.status = 'C' + str( a_asset.status )
 
                     # Was this asset marked as "to be cancelled?"
-                    if ( a_asset.status == 'to_cancel' ):
-                        if ( timediff.seconds > config[ 'cancel_order_after_minutes' ] * 60 ):
-                            if ( self.cancel_order( a_asset.order_id ) ):
-                                # Let's make sure we have the correct cash amount available for trading
-                                self.available_cash = self.get_available_cash()
-                        else:
-                            # It's not time to cancel it yet
-                            a_asset.status = 'new'
+                    timediff = now - a_asset.timestamp
+                    if a_asset.status in [ 'CPB', 'CPS' ] and timediff.seconds > config[ 'cancel_pending_after_minutes' ] * 60:
+                        self.cancel_order( a_asset.order_id )
                     else:
-                        a_asset.status = 'bought'
+                        # If it wasn't marked as 'to be cancelled', the order can be confirmed (remove the 'P' in front of the status)
+                        # If it's not time to cancel it yet, remove the 'C' in front of the status
+                        a_asset.status = a_asset.status[1:]
 
                 # Print a summary of all confirmed assets
-                if ( a_asset.status in [ 'new', 'bought' ] ):
-                    if ( not is_table_header_printed ):
-                        print( "{:<10}  {:<16}  {:<6}  {:<12}  {:<12}  {:<12} {:<12}".format( 'Status', 'Date/Time', 'Ticker', 'Quantity', 'Price', 'Cost', 'Value' ) )
+                if a_asset.status in [ 'B', 'PB', 'PS' ]:
+                    if not is_table_header_printed:
+                        print( "{:<16}  {:<2}  {:<6}  {:<12}  {:<12}  {:<12} {:<12}".format( 'Date/Time', 'St', 'Ticker', 'Quantity', 'Price', 'Cost', 'Value' ) )
                         is_table_header_printed = True
 
-                    print( "{:<10}  {:<16}  {:<6}  {:<12}  {:<12}  {:<12} {:<12}".format( str( a_asset.status ), a_asset.timestamp.strftime( '%Y-%m-%d %H:%M' ), str( a_asset.ticker ), str( a_asset.quantity ), str( a_asset.price ), str( round( a_asset.price * a_asset.quantity, 3 ) ), str( round( self.data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) ) )
+                    print( "{:<16}  {:<2}  {:<6}  {:<12}  {:<12}  {:<12} {:<12}".format( a_asset.timestamp.strftime( '%Y-%m-%d %H:%M' ), str( a_asset.status ), str( a_asset.ticker ), str( a_asset.quantity ), str( a_asset.price ), str( round( a_asset.price * a_asset.quantity, 3 ) ), str( round( self.data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) ) )
 
+                if a_asset.status == 'B':
                     # Is it time to sell this asset? ( Stop-loss: is the current price below the purchase price by the percentage defined in the config file? )
-                    if ( getattr( self.signal, 'sell_' + str(  config[ 'trade_signals' ][ 'sell' ] ) )( a_asset, self.data ) or ( self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ) ) ):
-                        self.sell( a_asset )
-
-        # Sometimes the Robinhood API fails to return a reliable value
-        if ( self.available_cash < 0 ):
-            self.available_cash = self.get_available_cash()
+                    if ( getattr( self.signal, 'sell_' + str(  config[ 'trade_signals' ][ 'sell' ] ) )( a_asset, self.data ) or ( self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ) ) ) and self.sell( a_asset ):
+                        self.update_available_cash()
 
         # Is it time to buy something?
         for a_robinhood_ticker in config[ 'ticker_list' ].values():
-            if ( getattr( self.signal, 'buy_' + str(  config[ 'trade_signals' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ) ):
-                self.buy( a_robinhood_ticker )
+            if getattr( self.signal, 'buy_' + str(  config[ 'trade_signals' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ) and self.buy( a_robinhood_ticker ):
+                self.update_available_cash()
 
         # Only track up to a fixed amount of data points
         self.data = self.data.tail( config[ 'max_data_rows' ] )
@@ -236,28 +229,35 @@ class bot:
         timer_handle.join()
 
     def buy( self, ticker ):
-        if ( self.available_cash == 0 or self.available_cash < config[ 'buy_amount_per_trade' ] or self.is_trading_locked ):
+        if self.available_cash == 0 or self.available_cash < config[ 'buy_amount_per_trade' ] or self.is_trading_locked:
             return False
         
+        # Retrieve the actual ask price from Robinhood
+        if not config[ 'simulate_api_calls' ]:
+            try:
+                quote = rh.get_crypto_quote( ticker )
+                price = float( quote[ 'ask_price' ] )
+            except:
+                price = self.data.iloc[ -1 ][ ticker ]
+        else:
+            price = self.data.iloc[ -1 ][ ticker ]
+
         # Values need to be specified to no more precision than listed in min_price_increments.
         # Truncate to 7 decimal places to avoid floating point problems way out at the precision limit
-        price = round( floor( self.data.iloc[ -1 ][ ticker ] / self.min_price_increments[ ticker ] ) * self.min_price_increments[ ticker ], 7 )
+        price = round( floor( price / self.min_price_increments[ ticker ] ) * self.min_price_increments[ ticker ], 7 )
         
         # How much to buy depends on the configuration
         quantity = ( self.available_cash if ( config[ 'buy_amount_per_trade' ] == 0 ) else config[ 'buy_amount_per_trade' ] ) / price
         quantity = round( floor( quantity / self.min_share_increments[ ticker ] ) * self.min_share_increments[ ticker ], 7 )
 
-        if ( config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ] ):
+        if config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ]:
             try:
                 buy_info = rh.order_buy_crypto_limit( str( ticker ), quantity, price )
 
                 # Add this new asset to our orders
-                self.orders[ buy_info[ 'id' ] ] = asset( ticker, quantity, price, buy_info[ 'id' ] )
+                self.orders[ buy_info[ 'id' ] ] = asset( ticker, quantity, price, buy_info[ 'id' ], 'PB' )
 
-                # Update the available cash for trading
-                self.available_cash = round( self.available_cash - quantity * price, 3 )
-
-                print( '## Bought ' + str( ticker ) + ' ' + str( quantity ) + ' at $' + str( price ) )
+                print( '## Submitted order to buy ' +  str( quantity ) + ' ' + str( ticker ) + ' at $' + str( price ) )
             except:
                 print( 'An exception occurred while trying to buy.' )
                 return False
@@ -269,23 +269,33 @@ class bot:
 
     def sell( self, asset ):
         # Do we have enough of this asset to sell?
-        if ( self.is_trading_locked ):
+        if self.is_trading_locked:
             return False
-           
+
+        # Retrieve the actual bid price from Robinhood
+        if not config[ 'simulate_api_calls' ]:
+            try:
+                quote = rh.get_crypto_quote( ticker )
+                price = float( quote[ 'bid_price' ] )
+            except:
+                price = self.data.iloc[ -1 ][ asset.ticker ]
+        else:
+            price = self.data.iloc[ -1 ][ asset.ticker ]
+
         # Values needs to be specified to no more precision than listed in min_price_increments. 
         # Truncate to 7 decimal places to avoid floating point problems way out at the precision limit
-        price = round( floor( self.data.iloc[ -1 ][ asset.ticker ] / self.min_price_increments[ asset.ticker ] ) * self.min_price_increments[ asset.ticker ], 7 )
+        price = round( floor( price / self.min_price_increments[ asset.ticker ] ) * self.min_price_increments[ asset.ticker ], 7 )
         profit = round( ( asset.quantity * price ) - ( asset.quantity * asset.price ), 3 )
 
-        if ( config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ] ):
+        if config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ]:
             try:
                 sell_info = rh.order_sell_crypto_limit( str( asset.ticker ), asset.quantity, price )
 
-                # Mark this asset as sold
-                self.orders[ asset.order_id ].status = 'sold'
+                # Mark this asset as pending sold
+                self.orders[ asset.order_id ].status = 'PS'
                 self.orders[ asset.order_id ].profit = profit
 
-                print( '## Sold ' + str( asset.ticker ) + ' ' + str( asset.quantity ) + ' for $' + str( price ) + ' (profit: $' + str( profit ) + ')' )
+                print( '## Submitted order to sell ' + str( asset.quantity ) + ' ' + str( asset.ticker ) + ' for $' + str( price ) + ' (profit: $' + str( profit ) + ')' )
             except:
                 print( 'An exception occurred while trying to sell.' )
                 return False
@@ -296,23 +306,23 @@ class bot:
         return True
 
     def data_has_gaps( self, now ):
-        if ( self.data.shape[ 0 ] <= 1 ):
+        if self.data.shape[ 0 ] <= 1:
             return True
 
         # Check for break between now and last sample
         timediff = now - datetime.strptime( self.data.iloc[ -1 ][ 'timestamp' ], '%Y-%m-%d %H:%M' )
 
         # Not enough data points available or it's been too long since we recorded any data
-        if ( timediff.seconds > ( config[ 'minutes_between_updates' ] + 1 ) * 60 ):
+        if timediff.seconds > ( config[ 'minutes_between_updates' ] + 1 ) * 120:
             return True
 
         # Check for break in sequence of samples to minimum consecutive sample number
         position = len( self.data ) - 1
-        if ( position >= self.min_consecutive_samples ):
+        if position >= self.min_consecutive_samples:
             for x in range( 0, self.min_consecutive_samples ):
                 timediff = datetime.strptime( self.data.iloc[ position - x ][ 'timestamp' ], '%Y-%m-%d %H:%M' ) - datetime.strptime( self.data.iloc[ position - ( x + 1 ) ][ 'timestamp' ], '%Y-%m-%d %H:%M' ) 
 
-                if ( timediff.seconds > ( config[ 'minutes_between_updates' ] + 1 ) * 60 ):
+                if timediff.seconds > ( config[ 'minutes_between_updates' ] + 1 ) * 120:
                     return True
 
         return False
@@ -355,18 +365,18 @@ class bot:
 
     def get_new_data( self, now ):
         # If the current dataset has gaps in it, we refresh it from Kraken
-        if ( self.data_has_gaps( now ) ):
+        if self.data_has_gaps( now ):
             self.init_data()
 
         new_row = { 'timestamp': now.strftime( "%Y-%m-%d %H:%M" ) }
 
         # Calculate moving averages and RSI values
         for a_kraken_ticker, a_robinhood_ticker in config[ 'ticker_list' ].items():
-            if ( not config[ 'simulate_api_calls' ] ):
+            if not config[ 'simulate_api_calls' ]:
                 try:
                     result = get_json( 'https://api.kraken.com/0/public/Ticker?pair=' + str( a_kraken_ticker ) ).json()
 
-                    if ( len( result[ 'error' ] ) == 0 ):
+                    if len( result[ 'error' ] ) == 0:
                         new_row[ a_robinhood_ticker ] = round( float( result[ 'result' ][ a_kraken_ticker ][ 'a' ][ 0 ] ), 3 )
                 except:
                     print( 'An exception occurred retrieving prices.' )
@@ -376,18 +386,18 @@ class bot:
 
             # If the new price is more than 40% lower/higher than the previous reading, assume it's an error somewhere
             percent_diff = ( abs( new_row[ a_robinhood_ticker ] - self.data.iloc[ -1 ][ a_robinhood_ticker ] ) / self.data.iloc[ -1 ][ a_robinhood_ticker ] ) * 100
-            if ( percent_diff > 40 ):
+            if percent_diff > 30:
                 print( 'Error: new price ($' + str( new_row[ a_robinhood_ticker ] ) + ') differs ' + str( round( percent_diff, 2 ) ) + '% from previous value, ignoring.' )
                 return False
 
             self.data = self.data.append( new_row, ignore_index = True )
 
             # If the Kraken API is overloaded, they freeze the values it returns
-            if ( ( self.data.tail( 4 )[ a_robinhood_ticker ].to_numpy()[ -1 ] == self.data.tail( 4 )[ a_robinhood_ticker ].to_numpy() ).all() ):
+            if ( self.data.tail( 4 )[ a_robinhood_ticker ].to_numpy()[ -1 ] == self.data.tail( 4 )[ a_robinhood_ticker ].to_numpy() ).all():
                 print( 'Repeating values detected for ' + str( a_robinhood_ticker ) + '. Ignoring data point.' )
                 self.data = self.data[:-1]
 
-            elif ( self.data.shape[ 0 ] > 0 ):
+            elif self.data.shape[ 0 ] > 0:
                 self.data[ a_robinhood_ticker + '_SMA_F' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_fast' ] ).mean()
                 self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
                 self.data[ a_robinhood_ticker + '_SMA_S' ] = self.data[ a_robinhood_ticker ].rolling( window = config[ 'moving_average_periods' ][ 'sma_slow' ] ).mean()
@@ -396,7 +406,7 @@ class bot:
                 self.data[ a_robinhood_ticker + '_RSI' ] = RSI( self.data[ a_robinhood_ticker ].values, timeperiod = config[ 'rsi_period' ] )
                 self.data[ a_robinhood_ticker + '_MACD' ], self.data[ a_robinhood_ticker + '_MACD_S' ], macd_hist = MACD( self.data[ a_robinhood_ticker ].values, fastperiod = config[ 'moving_average_periods' ][ 'macd_fast' ], slowperiod = config[ 'moving_average_periods' ][ 'macd_slow' ], signalperiod = config[ 'moving_average_periods' ][ 'macd_signal' ] )
 
-            if ( config[ 'save_charts' ] == True ):
+            if config[ 'save_charts' ] == True:
                 self.save_chart( [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_SMA_F', str( a_robinhood_ticker ) + '_SMA_S' ], str( a_robinhood_ticker ) + '_sma' )
                 self.save_chart( [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_EMA_F', str( a_robinhood_ticker ) + '_EMA_S' ], str( a_robinhood_ticker ) + '_ema' )
                 self.save_chart_rescale( [ a_robinhood_ticker, str( a_robinhood_ticker ) + '_RSI' ], str( a_robinhood_ticker ) + '_rsi' )
@@ -404,25 +414,24 @@ class bot:
 
         return True
 
-    def get_available_cash( self ):
-        available_cash = -1.0
-        
-        if ( not config[ 'simulate_api_calls' ] ):
+    def update_available_cash( self ):
+        if not config[ 'simulate_api_calls' ]:
             try:
                 me = rh.account.load_phoenix_account( info=None )
-                available_cash = round( float( me[ 'crypto_buying_power' ][ 'amount' ] ) - config[ 'reserve' ], 3 )
+                self.available_cash = round( float( me[ 'crypto_buying_power' ][ 'amount' ] ) - config[ 'reserve' ], 3 )
             except:
                 print( 'An exception occurred while reading available cash amount.' )
+                return False
         else:
-            available_cash = randint( 400000, 500000 ) + config[ 'reserve' ]
+            self.available_cash = randint( 400000, 500000 ) + config[ 'reserve' ]
 
-        return available_cash
+        return True
 
     def cancel_order( self, order_id ):
-        if ( not config[ 'simulate_api_calls' ] ):
+        if not config[ 'simulate_api_calls' ]:
             try:
                 cancelResult = rh.cancel_crypto_order( order_id )
-                self.orders[ order_id ].status = 'cancelled'
+                self.orders[ order_id ].status = 'C'
                 print( 'Cancelled order #' + str( order_id ) + '.' )
             except:
                 print( 'An exception occurred while attempting to cancel order #' + str( order_id ) + '.')
@@ -431,10 +440,13 @@ class bot:
         # Let Robinhood process this transaction
         sleep( 10 )
 
+        # No profit on this order
+        self.orders[ order_id ].profit = 0
+
         return True
 
     def save_chart( self, columns, label ):
-        if ( len( columns ) < 1 ):
+        if len( columns ) < 1:
             return False
 
         slice = self.data.loc[:, [ 'timestamp' ] + columns ]
@@ -447,7 +459,7 @@ class bot:
         plt.close( fig )
 
     def save_chart_rescale( self, columns, label ):
-        if ( len( columns ) < 1 ):
+        if len( columns ) < 1:
             return False
 
         ax = {}

@@ -32,7 +32,7 @@ config = {
     'stop_loss_threshold': 0.3,   # sell if the price drops at least 30% below the purchase price
 
     'minutes_between_updates': 5, # 1 (default), 5, 15, 30, 60, 240, 1440, 10080, 21600
-    'cancel_order_after_minutes': 20, # how long to wait before cancelling an order that hasn't been filled
+    'cancel_pending_after_minutes': 20, # how long to wait before cancelling an order that hasn't been filled
     'save_charts': True,
     'max_data_rows': 2000
 }
