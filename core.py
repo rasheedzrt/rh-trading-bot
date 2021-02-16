@@ -418,7 +418,7 @@ class bot:
         if not config[ 'simulate_api_calls' ]:
             try:
                 me = rh.account.load_phoenix_account( info=None )
-                self.available_cash = round( float( me[ 'crypto_buying_power' ][ 'amount' ] ) - config[ 'reserve' ], 3 )
+                self.available_cash = max( 0, round( float( me[ 'crypto_buying_power' ][ 'amount' ] ) - config[ 'reserve' ], 3 ) )
             except:
                 print( 'An exception occurred while reading available cash amount.' )
                 return False
