@@ -188,23 +188,28 @@ class bot:
                         # If it's not time to cancel it yet, remove the 'C' in front of the status
                         a_asset.status = a_asset.status[1:]
 
+                        # If this order was filled, let's see how much cash we have now
+                        if a_asset.status in [ 'B', 'S' ]:
+                            self.update_available_cash()
+
                 # Print a summary of all confirmed assets
                 if a_asset.status in [ 'B', 'PB', 'PS' ]:
                     if not is_table_header_printed:
-                        print( "{:<16}  {:<2}  {:<6}  {:<12}  {:<12}  {:<12} {:<12}".format( 'Date/Time', 'St', 'Ticker', 'Quantity', 'Price', 'Cost', 'Value' ) )
+                        print( "{:<16}  {:<2}  {:<6}  {:<12}  {:<12}  {:<12}  {:<12}".format( 'Date/Time', 'St', 'Ticker', 'Quantity', 'Price', 'Cost', 'Value' ) )
                         is_table_header_printed = True
 
-                    print( "{:<16}  {:<2}  {:<6}  {:<12}  {:<12}  {:<12} {:<12}".format( a_asset.timestamp.strftime( '%Y-%m-%d %H:%M' ), str( a_asset.status ), str( a_asset.ticker ), str( a_asset.quantity ), str( a_asset.price ), str( round( a_asset.price * a_asset.quantity, 3 ) ), str( round( self.data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) ) )
+                    print( "{:<16}  {:<2}  {:<6}  {:<12}  {:<12}  {:<12}  {:<12}".format( a_asset.timestamp.strftime( '%Y-%m-%d %H:%M' ), str( a_asset.status ), str( a_asset.ticker ), str( a_asset.quantity ), str( a_asset.price ), str( round( a_asset.price * a_asset.quantity, 3 ) ), str( round( self.data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) ) )
 
                 if a_asset.status == 'B':
                     # Is it time to sell this asset? ( Stop-loss: is the current price below the purchase price by the percentage defined in the config file? )
-                    if ( getattr( self.signal, 'sell_' + str(  config[ 'trade_signals' ][ 'sell' ] ) )( a_asset, self.data ) or ( self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ) ) ) and self.sell( a_asset ):
-                        self.update_available_cash()
+                    if getattr( self.signal, 'sell_' + str(  config[ 'trade_signals' ][ 'sell' ] ) )( a_asset, self.data ) or self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ):
+                        self.sell( a_asset )
+                        
 
         # Is it time to buy something?
         for a_robinhood_ticker in config[ 'ticker_list' ].values():
-            if getattr( self.signal, 'buy_' + str(  config[ 'trade_signals' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ) and self.buy( a_robinhood_ticker ):
-                self.update_available_cash()
+            if getattr( self.signal, 'buy_' + str(  config[ 'trade_signals' ][ 'buy' ] ) )( a_robinhood_ticker, self.data ):
+                self.buy( a_robinhood_ticker )
 
         # Only track up to a fixed amount of data points
         self.data = self.data.tail( config[ 'max_data_rows' ] )
@@ -238,6 +243,7 @@ class bot:
                 quote = rh.get_crypto_quote( ticker )
                 price = float( quote[ 'ask_price' ] )
             except:
+                print( 'Could not retrieve ask price from Robinhood. Using Kraken\'s.' )
                 price = self.data.iloc[ -1 ][ ticker ]
         else:
             price = self.data.iloc[ -1 ][ ticker ]
@@ -278,6 +284,7 @@ class bot:
                 quote = rh.get_crypto_quote( ticker )
                 price = float( quote[ 'bid_price' ] )
             except:
+                print( 'Could not retrieve bid price from Robinhood. Using Kraken\'s.' )
                 price = self.data.iloc[ -1 ][ asset.ticker ]
         else:
             price = self.data.iloc[ -1 ][ asset.ticker ]
@@ -295,7 +302,7 @@ class bot:
                 self.orders[ asset.order_id ].status = 'PS'
                 self.orders[ asset.order_id ].profit = profit
 
-                print( '## Submitted order to sell ' + str( asset.quantity ) + ' ' + str( asset.ticker ) + ' for $' + str( price ) + ' (profit: $' + str( profit ) + ')' )
+                print( '## Submitted order to sell ' + str( asset.quantity ) + ' ' + str( asset.ticker ) + ' for $' + str( price ) + ' (estimated profit: $' + str( profit ) + ')' )
             except:
                 print( 'An exception occurred while trying to sell.' )
                 return False

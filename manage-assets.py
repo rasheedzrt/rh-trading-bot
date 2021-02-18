@@ -56,7 +56,7 @@ if len( sys.argv ) > 1:
         import csv
         with open( 'orders.csv', 'w', encoding='utf8' ) as csv_file:
             writer = csv.writer( csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL )
-            writer.writerow( [ 'Date and Time', 'Order ID', 'Status', 'Ticker', 'Quantity', 'Price', 'Cost', 'Current Value', 'Profit' ] )
+            writer.writerow( [ 'Date and Time', 'Order ID', 'Status', 'Ticker', 'Quantity', 'Price', 'Cost', 'Current Value', 'Estimated Profit' ] )
             for a_asset in orders.values():
                 row = [
                     a_asset.timestamp.strftime( '%Y-%m-%d %H:%M' ),
@@ -95,7 +95,7 @@ if len( sys.argv ) > 1:
                 if a_asset.status == 'B':
                     print( 'Current Value: $ ' + str( round( data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) )
                 elif a_asset.status == 'S':
-                    print( 'Profit: $ ' + str( a_asset.profit ) )
+                    print( 'Estimated Profit: $ ' + str( a_asset.profit ) )
 
                 print()
     else:
