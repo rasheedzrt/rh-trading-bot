@@ -217,7 +217,7 @@ class bot:
         # Final status for this iteration
         print( '-- Bot Status ---------------------------' )
         print( 'Iteration completed on ' +str( datetime.now().strftime( '%Y-%m-%d %H:%M' ) ) )
-        print( 'Buying power: $' + str( self.available_cash ) )
+        print( 'Buying power: $ ' + str( self.available_cash ) )
         print( '-- Data Snapshot ------------------------' )
         print( self.data.tail() )
 

@@ -79,25 +79,23 @@ if len( sys.argv ) > 1:
 
     # List all orders in the log
     if len( orders ) > 0:
-        print( 'Asset Log -------------------------------' )
-        for a_asset in orders.values():
-            if len( sys.argv ) <= 2 or ( len( sys.argv ) > 2 and a_asset.status == sys.argv[ 2 ] ):
+        for count, i in enumerate( orders ):
+            if len( sys.argv ) <= 2 or sys.argv[ 1 ] != 'list' or ( len( sys.argv ) > 2 and sys.argv[ 2 ] == orders[ i ].status ):
+                print( "\n-- {:05d} -------------------------------".format( count + 1 ) )
                 print( "Date and time: {}\nID: {}\nStatus: {}\nTicker: {}\nQuantity: {}\nPrice: $ {}\nCost: $ {}".format(
-                    a_asset.timestamp.strftime( '%Y-%m-%d %H:%M' ),
-                    str( a_asset.order_id ),
-                    str( a_asset.status ),
-                    str( a_asset.ticker ),
-                    str( a_asset.quantity ),
-                    str( a_asset.price ),
-                    str( round( a_asset.price * a_asset.quantity, 3 ) )
+                    orders[ i ].timestamp.strftime( '%Y-%m-%d %H:%M' ),
+                    str( orders[ i ].order_id ),
+                    str( orders[ i ].status ),
+                    str( orders[ i ].ticker ),
+                    str( orders[ i ].quantity ),
+                    str( orders[ i ].price ),
+                    str( round( orders[ i ].price * orders[ i ].quantity, 3 ) )
                 ) )
 
-                if a_asset.status == 'B':
-                    print( 'Current Value: $ ' + str( round( data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ) )
-                elif a_asset.status == 'S':
-                    print( 'Estimated Profit: $ ' + str( a_asset.profit ) )
-
-                print()
+                if orders[ i ].status == 'B':
+                    print( 'Current Value: $ ' + str( round( data.iloc[ -1 ][ orders[ i ].ticker ] * orders[ i ].quantity, 3 ) ) )
+                elif orders[ i ].status == 'S':
+                    print( 'Estimated Profit: $ ' + str( orders[ i ].profit ) )
     else:
         print( 'No orders found.' )
 
