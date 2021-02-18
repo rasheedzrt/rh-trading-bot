@@ -1,7 +1,7 @@
 #!/usr/bin/python3 -u
 
 # Crypto Trading Bot
-# Version: 1.4.1
+# Version: 1.4.2
 # Credits: https://github.com/JasonRBowling/cryptoTradingBot/
 
 from config import config
