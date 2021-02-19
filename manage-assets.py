@@ -68,9 +68,9 @@ if len( sys.argv ) > 1:
                     str( round( a_asset.price * a_asset.quantity, 3 ) )
                 ]
 
-                if a_asset.status == 'B':
+                if a_asset.status in [ 'PB', 'B' ]:
                     row.extend( [ str( round( data.iloc[ -1 ][ a_asset.ticker ] * a_asset.quantity, 3 ) ), 0 ] )
-                elif a_asset.status == 'S':
+                elif a_asset.status in [ 'PS', 'S' ]:
                    row.extend( [ 0, str( a_asset.profit ) ] )
                 else:
                     row.extend( [ 0, 0 ] )
@@ -92,9 +92,9 @@ if len( sys.argv ) > 1:
                     str( round( orders[ i ].price * orders[ i ].quantity, 3 ) )
                 ) )
 
-                if orders[ i ].status == 'B':
+                if orders[ i ].status in [ 'PB', 'B' ]:
                     print( 'Current Value: $ ' + str( round( data.iloc[ -1 ][ orders[ i ].ticker ] * orders[ i ].quantity, 3 ) ) )
-                elif orders[ i ].status == 'S':
+                elif orders[ i ].status in [ 'PS', 'S' ]:
                     print( 'Estimated Profit: $ ' + str( orders[ i ].profit ) )
     else:
         print( 'No orders found.' )
