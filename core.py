@@ -188,6 +188,10 @@ class bot:
                         # If it's not time to cancel it yet, remove the 'C' in front of the status
                         a_asset.status = a_asset.status[1:]
 
+                        # If we confirmed that this asset was sold, we can update the available cash balance
+                        if a_asset.status == 'S':
+                            self.update_available_cash()
+
                 # Print a summary of all confirmed assets
                 if a_asset.status in [ 'B', 'PB', 'PS' ]:
                     if not is_table_header_printed:
@@ -198,8 +202,9 @@ class bot:
 
                 if a_asset.status == 'B':
                     # Is it time to sell this asset? ( Stop-loss: is the current price below the purchase price by the percentage defined in the config file? )
-                    if ( getattr( self.signal, 'sell_' + str(  config[ 'trade_signals' ][ 'sell' ] ) )( a_asset, self.data ) or self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ) ) and self.sell( a_asset ):
-                        self.update_available_cash()
+                    if getattr( self.signal, 'sell_' + str(  config[ 'trade_signals' ][ 'sell' ] ) )( a_asset, self.data ) or self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ):
+                        self.sell( a_asset )
+                        # During the following iteration we will confirm if this limit order was actually executed, and update the available cash balance accordingly
 
         # Is it time to buy something?
         for a_robinhood_ticker in config[ 'ticker_list' ].values():
@@ -245,10 +250,10 @@ class bot:
 
         # Values need to be specified to no more precision than listed in min_price_increments.
         # Truncate to 7 decimal places to avoid floating point problems way out at the precision limit
-        price = round( floor( price / self.min_price_increments[ ticker ] ) * self.min_price_increments[ ticker ], 7 )
+        price_precision = round( floor( price / self.min_price_increments[ ticker ] ) * self.min_price_increments[ ticker ], 7 )
         
         # How much to buy depends on the configuration
-        quantity = ( self.available_cash if ( config[ 'buy_amount_per_trade' ] == 0 ) else config[ 'buy_amount_per_trade' ] ) / price
+        quantity = ( self.available_cash if ( config[ 'buy_amount_per_trade' ] == 0 ) else config[ 'buy_amount_per_trade' ] ) / price_precision
         quantity = round( floor( quantity / self.min_share_increments[ ticker ] ) * self.min_share_increments[ ticker ], 7 )
 
         if config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ]:
@@ -256,14 +261,17 @@ class bot:
                 buy_info = rh.order_buy_crypto_limit( str( ticker ), quantity, price )
 
                 # Add this new asset to our orders
-                self.orders[ buy_info[ 'id' ] ] = asset( ticker, quantity, price, buy_info[ 'id' ], 'PB' )
+                self.orders[ buy_info[ 'id' ] ] = asset( ticker, quantity, price_precision, buy_info[ 'id' ], 'PB' )
 
-                print( '## Submitted order to buy ' +  str( quantity ) + ' ' + str( ticker ) + ' at $' + str( price ) )
+                print( '## Submitted order to buy ' +  str( quantity ) + ' ' + str( ticker ) + ' at $' + str( price_precision ) )
+                
+                if ( price != self.data.iloc[ -1 ][ ticker ] ):
+                    print( '## Price Difference: Kraken $' + str( self.data.iloc[ -1 ][ ticker ] ) + ', Robinhood $ ' + str( price ) )
             except:
                 print( 'An exception occurred while trying to buy.' )
                 return False
         else:
-            print( '## Would have bought ' + str( ticker ) + ' ' + str( quantity ) + ' at $' + str( price ) + ', if trades were enabled' )
+            print( '## Would have bought ' + str( ticker ) + ' ' + str( quantity ) + ' at $' + str( price_precision ) + ', if trades were enabled' )
             return False
 
         return True
@@ -286,23 +294,26 @@ class bot:
 
         # Values needs to be specified to no more precision than listed in min_price_increments. 
         # Truncate to 7 decimal places to avoid floating point problems way out at the precision limit
-        price = round( floor( price / self.min_price_increments[ asset.ticker ] ) * self.min_price_increments[ asset.ticker ], 7 )
-        profit = round( ( asset.quantity * price ) - ( asset.quantity * asset.price ), 3 )
+        price_precision = round( floor( price / self.min_price_increments[ asset.ticker ] ) * self.min_price_increments[ asset.ticker ], 7 )
+        profit = round( ( asset.quantity * price_precision ) - ( asset.quantity * asset.price ), 3 )
 
         if config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ]:
             try:
-                sell_info = rh.order_sell_crypto_limit( str( asset.ticker ), asset.quantity, price )
+                sell_info = rh.order_sell_crypto_limit( str( asset.ticker ), asset.quantity, price_precision )
 
                 # Mark this asset as pending sold
                 self.orders[ asset.order_id ].status = 'PS'
                 self.orders[ asset.order_id ].profit = profit
 
-                print( '## Submitted order to sell ' + str( asset.quantity ) + ' ' + str( asset.ticker ) + ' at $' + str( price ) + ' (estimated profit: $' + str( profit ) + ')' )
+                print( '## Submitted order to sell ' + str( asset.quantity ) + ' ' + str( asset.ticker ) + ' at $' + str( price_precision ) + ' (estimated profit: $' + str( profit ) + ')' )
+            
+                if ( price != self.data.iloc[ -1 ][ asset.ticker ] ):
+                    print( '## Price Difference: Kraken $' + str( self.data.iloc[ -1 ][ asset.ticker ] ) + ', Robinhood $ ' + str( price ) )
             except:
                 print( 'An exception occurred while trying to sell.' )
                 return False
         else:
-            print( '## Would have sold ' + str( asset.ticker ) + ' ' + str( asset.quantity ) + ' for $' + str( price ) + ', if trades were enabled' )
+            print( '## Would have sold ' + str( asset.ticker ) + ' ' + str( asset.quantity ) + ' at $' + str( price_precision ) + ', if trades were enabled' )
             return False
 
         return True
