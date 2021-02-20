@@ -56,9 +56,9 @@ A summary of each iteration is logged in `status.log`. The bot maintains a list 
 
 ```
 -- Assets -------------------------------
-Status      Date/Time         Ticker  Quantity      Price         Value       
-bought      2021-02-14 19:05  ETH     0.137844      1813.52       249.983      236.707
-bought      2021-02-14 22:34  ETH     0.11562       1730.07       200.031      198.544     
+St     Date/Time         Ticker  Quantity      Price         Value       
+B      2021-02-14 19:05  ETH     0.137844      1813.52       249.983      236.707
+PB     2021-02-14 22:34  ETH     0.11562       1730.07       200.031      198.544     
 -- Bot Status ---------------------------
 Iteration completed on 2021-02-14 22:35
 Buying power: $72.16
@@ -71,7 +71,7 @@ Buying power: $72.16
 720  2021-02-14 22:35  1732.21  1726.805000  1767.253125  1729.709339  1758.323931  45.543249 -10.309129  -14.225058
 ```
 
-The "Assets" section, if present, lists all the assets the bot is managing for you, along with their purchase price, cost and current value. If the "Status" column for a given order reads `new`, it means that this order was recently placed and hasn't been confirmed yet. In order to avoid too many requests to the Robinhood API, the bot will check after a given amount of time (see config param `cancel_order_after_minutes`) if the order was filled or not, and either confirm it or cancel it. The "Bot Status" section shows the available cash amount that can be used to buys new assets. Last but not least, you'll see a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings.
+The "Assets" section, if present, lists all the assets the bot is managing for you, along with their purchase price, cost and current value. If the "Status" column for a given order reads `PB` (pending buy) or `PS` (pending sell), it means that the corresponding limit order was recently placed and hasn't been confirmed yet. In order to avoid too many requests to the Robinhood API, the bot will check after a given amount of time (see config param `cancel_order_after_minutes`) if the order was filled or not, and either confirm it or cancel it. The "Bot Status" section shows the available cash amount that can be used to buys new assets. Last but not least, you'll see a snapshot of the most recent data retrieved from Kraken, along with the corresponding indicators (SMA_F = fast SMA, SMA_S = slow SMA, etc), where the rolling period for each of them can be customized in the settings.
 
 ## Manually adding orders
 You may have bought some coins on your own, maybe because you saw an excellent opportunity to buy a dip, and now would like the bot to monitor those new assets and sell them when the conditions are more favorable. Or viceversa, your algorithm did not catch a sudden increase and you decided to sell an asset on your own. For situations like these, I've added a simple Python script that you can run directly as a shell command. It accepts the following parameters:
