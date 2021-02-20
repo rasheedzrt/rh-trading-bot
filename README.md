@@ -16,7 +16,7 @@ You'll need access to a working Python3 interpreter. For the sake of simplicity,
 * [Pandas](https://pandas.pydata.org/pandas-docs/stable/index.html): `pip3 install pandas`
 * [TA-Lib](https://www.ta-lib.org/): download their tarball and compile it
 
-Once you have all the dependencies in place, clone this repo somewhere on your machine, copy `config-sample.py` to `config.py`, and edit it to enter at least your Robinhood username and password. You can also use the following settings to customize the bot's behavior:
+Once you have all the dependencies in place, clone this repo somewhere on your machine, copy `config-sample.py` to `config.py`, and edit it to customize the bot's behavior:
 * (string) `username` and `password`: Robinhood credentials (optional, see **Running the bot** here below)
 * (bool) `trades_enabled`:  If False, run in test mode and just collect data, otherwise submit orders
 * (bool) `simulate_api_calls`: Simulate connections to Kraken and Robinhood APIs (by generating random values for all API calls)
