@@ -1,5 +1,5 @@
 config = {
-    'username': "", # Robinhood credentials
+    'username': "", # Robinhood credentials. If you don't want to keep them stored here, launch "./2fa.py" to setup the access token interactively
     'password': "",
     'trades_enabled': False, # if False, just collect data
     'simulate_api_calls': False, # if enabled, just pretend to connect to Robinhood

@@ -77,10 +77,6 @@ class bot:
             if not isDefined:
                 config[ c ] = self.default_config[ c ]
 
-        if not config[ 'username' ] or not config[ 'password' ]:
-            print( 'RobinHood credentials not found in config file. Aborting.' )
-            exit()
-
         if config[ 'rsi_period' ] > config[ 'moving_average_periods' ][ 'sma_fast' ]:
             self.min_consecutive_samples = config[ 'rsi_period' ]
         else:
@@ -119,7 +115,7 @@ class bot:
         if not config[ 'simulate_api_calls' ]:
             try:
                 print( 'Logging in to Robinhood' )
-                rh_response = rh.login( config[ 'username' ], config[ 'password' ] )
+                rh_response = rh.login( config[ 'username' ], config[ 'password' ],  )
             except:
                 print( 'Got exception while attempting to log into Robinhood.' )
                 exit()
@@ -205,6 +201,9 @@ class bot:
                     if getattr( self.signal, 'sell_' + str(  config[ 'trade_signals' ][ 'sell' ] ) )( a_asset, self.data ) or self.data.iloc[ -1 ][ a_asset.ticker ] < a_asset.price - ( a_asset.price * config[ 'stop_loss_threshold' ] ):
                         self.sell( a_asset )
                         # During the following iteration we will confirm if this limit order was actually executed, and update the available cash balance accordingly
+
+            if not is_table_header_printed:
+                print( 'No assets found.')
 
         # Is it time to buy something?
         for a_robinhood_ticker in config[ 'ticker_list' ].values():
