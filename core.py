@@ -1,7 +1,7 @@
 #!/usr/bin/python3 -u
 
 # Crypto Trading Bot
-# Version: 1.4.2
+# Version: 1.4.3
 # Credits: https://github.com/JasonRBowling/cryptoTradingBot/
 
 from config import config
@@ -258,7 +258,7 @@ class bot:
 
         if config[ 'trades_enabled' ] and not config[ 'simulate_api_calls' ]:
             try:
-                buy_info = rh.order_buy_crypto_limit( str( ticker ), quantity, price )
+                buy_info = rh.order_buy_crypto_limit( str( ticker ), quantity, price_precision )
 
                 # Add this new asset to our orders
                 self.orders[ buy_info[ 'id' ] ] = asset( ticker, quantity, price_precision, buy_info[ 'id' ], 'PB' )
@@ -284,7 +284,7 @@ class bot:
         # Retrieve the actual bid price from Robinhood
         if not config[ 'simulate_api_calls' ]:
             try:
-                quote = rh.get_crypto_quote( ticker )
+                quote = rh.get_crypto_quote( asset.ticker )
                 price = float( quote[ 'bid_price' ] )
             except:
                 print( 'Could not retrieve bid price from Robinhood. Using Kraken\'s.' )
