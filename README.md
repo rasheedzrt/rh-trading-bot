@@ -36,7 +36,7 @@ Once you have all the dependencies in place, clone this repo somewhere on your m
 * (int) `max_data_rows`: Max number of data points to store in the Pickle file (if you have issues with memory limits on your machine). 1k rows = 70kB
 
 ## Running the bot
-I've included a simple Bash utility script to start, stop and check the bot's status:
+If you have 2FA enabled, or you prefer not to store your Robinhood credentials in a file, you'll need to authenticate the first time (and every time the access token expires) by using the `auth.py` script, which will ask you to enter your username, password and, if needed, your 2FA code you receive via SMS. Once this step has been taken care of, you can use the bundled utility script to start, stop and check the bot's status:
 
 * `./bot.sh start` will run the bot in the background (even after you close your terminal window)
 * `./bot.sh stop` will stop the background process
