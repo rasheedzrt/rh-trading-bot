@@ -1,7 +1,7 @@
 #!/usr/bin/python3 -u
 
 # Crypto Trading Bot
-# Version: 1.4.3
+# Version: 1.5
 # Credits: https://github.com/JasonRBowling/cryptoTradingBot/
 
 from config import config
@@ -29,6 +29,7 @@ class bot:
         'password': '',
         'trades_enabled': False,
         'simulate_api_calls': False,
+        'data_source': 'robinhood',
         'ticker_list': {
             'XETHZUSD': 'ETH'
         },
@@ -242,7 +243,7 @@ class bot:
                 quote = rh.get_crypto_quote( ticker )
                 price = float( quote[ 'ask_price' ] )
             except:
-                print( 'Could not retrieve ask price from Robinhood. Using Kraken\'s.' )
+                print( 'Could not retrieve ask price from Robinhood. Using most recent value.' )
                 price = self.data.iloc[ -1 ][ ticker ]
         else:
             price = self.data.iloc[ -1 ][ ticker ]
@@ -265,7 +266,7 @@ class bot:
                 print( '## Submitted order to buy ' +  str( quantity ) + ' ' + str( ticker ) + ' at $' + str( price_precision ) )
                 
                 if ( price != self.data.iloc[ -1 ][ ticker ] ):
-                    print( '## Price Difference: Kraken $' + str( self.data.iloc[ -1 ][ ticker ] ) + ', Robinhood $ ' + str( price ) )
+                    print( '## Price Difference: Mark $' + str( self.data.iloc[ -1 ][ ticker ] ) + ', Ask $' + str( price ) )
             except:
                 print( 'An exception occurred while trying to buy.' )
                 return False
@@ -286,7 +287,7 @@ class bot:
                 quote = rh.get_crypto_quote( asset.ticker )
                 price = float( quote[ 'bid_price' ] )
             except:
-                print( 'Could not retrieve bid price from Robinhood. Using Kraken\'s.' )
+                print( 'Could not retrieve bid price from Robinhood. Using most recent value.' )
                 price = self.data.iloc[ -1 ][ asset.ticker ]
         else:
             price = self.data.iloc[ -1 ][ asset.ticker ]
@@ -307,7 +308,7 @@ class bot:
                 print( '## Submitted order to sell ' + str( asset.quantity ) + ' ' + str( asset.ticker ) + ' at $' + str( price_precision ) + ' (estimated profit: $' + str( profit ) + ')' )
             
                 if ( price != self.data.iloc[ -1 ][ asset.ticker ] ):
-                    print( '## Price Difference: Kraken $' + str( self.data.iloc[ -1 ][ asset.ticker ] ) + ', Robinhood $ ' + str( price ) )
+                    print( '## Price Difference: Mark $' + str( self.data.iloc[ -1 ][ asset.ticker ] ) + ', Bid $' + str( price ) )
             except:
                 print( 'An exception occurred while trying to sell.' )
                 return False
@@ -386,14 +387,22 @@ class bot:
         # Calculate moving averages and RSI values
         for a_kraken_ticker, a_robinhood_ticker in config[ 'ticker_list' ].items():
             if not config[ 'simulate_api_calls' ]:
-                try:
-                    result = get_json( 'https://api.kraken.com/0/public/Ticker?pair=' + str( a_kraken_ticker ) ).json()
+                if config[ 'data_source' ] == 'kraken':
+                    try:
+                        result = get_json( 'https://api.kraken.com/0/public/Ticker?pair=' + str( a_kraken_ticker ) ).json()
 
-                    if len( result[ 'error' ] ) == 0:
-                        new_row[ a_robinhood_ticker ] = round( float( result[ 'result' ][ a_kraken_ticker ][ 'a' ][ 0 ] ), 3 )
-                except:
-                    print( 'An exception occurred retrieving prices.' )
-                    return False
+                        if len( result[ 'error' ] ) == 0:
+                            new_row[ a_robinhood_ticker ] = round( float( result[ 'result' ][ a_kraken_ticker ][ 'a' ][ 0 ] ), 3 )
+                    except:
+                        print( 'An exception occurred retrieving prices from Kraken.' )
+                        return False
+                else:
+                    try:
+                        result = rh.get_crypto_quote( a_robinhood_ticker )
+                        new_row[ a_robinhood_ticker ] = round( float( result[ 'mark_price' ] ), 3 )
+                    except:
+                        print( 'An exception occurred retrieving prices from Robinhood.' )
+                        return False
             else:
                 new_row[ a_robinhood_ticker ] = round( float( randint( 400000, 500000 ) ), 3 )
 
@@ -405,7 +414,7 @@ class bot:
 
             self.data = self.data.append( new_row, ignore_index = True )
 
-            # If the Kraken API is overloaded, they freeze the values it returns
+            # If the API is overloaded, it keeps returning the same value
             if ( self.data.tail( 4 )[ a_robinhood_ticker ].to_numpy()[ -1 ] == self.data.tail( 4 )[ a_robinhood_ticker ].to_numpy() ).all():
                 print( 'Repeating values detected for ' + str( a_robinhood_ticker ) + '. Ignoring data point.' )
                 self.data = self.data[:-1]
