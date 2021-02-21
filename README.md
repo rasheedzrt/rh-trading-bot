@@ -20,6 +20,7 @@ Once you have all the dependencies in place, clone this repo somewhere on your m
 * (string) `username` and `password`: Robinhood credentials (optional, see **Running the bot** here below)
 * (bool) `trades_enabled`:  If False, run in test mode and just collect data, otherwise submit orders
 * (bool) `simulate_api_calls`: Simulate connections to Kraken and Robinhood APIs (by generating random values for all API calls)
+* (string) `data_source`: Choose which service to use to track prices
 * (list) `ticker_list`: List of coin ticker pairs Kraken/Robinhood (XETHZUSD/ETH, etc); see [here](https://api.kraken.com/0/public/AssetPairs) for a complete list of available tickers on Kraken
 * (dict) `trade_signals`: Select which strategies to use (buy, sell); see _signals.py_ for a list of available methods (omit the *buy_*/*sell_* method prefix when passing the value here: buy_sma_crossover_rsi -> sma_crossover_rsi)
 * (float) `buy_below_moving_average`: Used by one of the built-in signals (sma_rsi_threshold), if the price dips below the MA by this percentage, and if the RSI is below the oversold threshold (see below), it will try to buy
